@@ -1,0 +1,69 @@
+[
+  {
+    "account_currency": "EUR",
+    "account_iban": "DE75512108001245126199",
+    "account_other_id": null,
+    "additional_info": null,
+    "closing_available": null,
+    "closing_balance": {
+      "amount": "95.00",
+      "credit_debit": "C",
+      "currency": "EUR",
+      "date": "2026-01-03"
+    },
+    "closing_is_intermediate": false,
+    "creation_datetime": null,
+    "electronic_seq_number": null,
+    "forward_available": [],
+    "from_datetime": null,
+    "opening_balance": {
+      "amount": "80.00",
+      "credit_debit": "C",
+      "currency": "EUR",
+      "date": "2026-01-02"
+    },
+    "opening_is_intermediate": false,
+    "other_balances": [],
+    "page_count": null,
+    "related_reference": null,
+    "sequence_number": 1,
+    "source_format": "mt940",
+    "statement_id": "SYNTH-M16",
+    "statement_number": 1,
+    "summary": null,
+    "to_datetime": null,
+    "transactions": [
+      {
+        "additional_info": null,
+        "amount": "15.00",
+        "bank_reference": null,
+        "booking_date": "2026-01-03",
+        "btc": null,
+        "charges_amount": null,
+        "counterparty": null,
+        "credit_debit": "C",
+        "creditor_reference": null,
+        "currency": null,
+        "customer_reference": "NONREF",
+        "details": [],
+        "end_to_end_id": null,
+        "entry_reference": null,
+        "exchange_rate": null,
+        "funds_code": null,
+        "instructed_amount": null,
+        "instructed_currency": null,
+        "is_reversal": false,
+        "mandate_id": null,
+        "purpose_code": null,
+        "remittance_unstructured": [
+          "ENVELOPED PAYMENT"
+        ],
+        "return_reason": null,
+        "status": "BOOK",
+        "supplementary_details": null,
+        "swift_tx_type": "NTRF",
+        "value_date": "2026-01-03"
+      }
+    ]
+  }
+]

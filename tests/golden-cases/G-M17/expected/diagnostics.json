@@ -1,0 +1,22 @@
+{
+  "codes": {
+    "camt.053.001.02": [],
+    "csv": []
+  },
+  "loss": {
+    "camt.053.001.02": [
+      [
+        "sequence_number",
+        "dropped",
+        "model->camt.053.001.02"
+      ]
+    ],
+    "csv": [
+      [
+        "forward available balance",
+        "dropped",
+        "model->csv"
+      ]
+    ]
+  }
+}

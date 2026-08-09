@@ -1,0 +1,43 @@
+{
+  "id": "G-C01",
+  "input": {
+    "file": "tests/fixtures/camt053/C01.xml",
+    "format": "camt.053.001.02",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [
+    {
+      "target": "mt940",
+      "expected_output": [
+        "output.mt940.sta"
+      ]
+    },
+    {
+      "target": "csv",
+      "expected_output": [
+        "output.csv.transactions.csv",
+        "output.csv.statements.csv"
+      ]
+    },
+    {
+      "target": "camt.053.001.08",
+      "expected_output": [
+        "output.camt.053.001.08.xml"
+      ]
+    }
+  ],
+  "reconciliation": {
+    "currency": "EUR",
+    "opening_balance": "1000.00",
+    "closing_balance": "1150.00",
+    "total_credits": "200.00",
+    "total_debits": "50.00",
+    "transaction_count": 2,
+    "credit_count": 1,
+    "debit_count": 1
+  },
+  "validation": {
+    "expected_result": "PASS",
+    "expected_warnings": []
+  }
+}

@@ -1,0 +1,13 @@
+﻿statement_id,account_iban,account_other_id,statement_number,sequence_number,currency,booking_date,value_date,amount,credit_debit,reversal,transaction_type_code,customer_reference,bank_reference,remittance_info,end_to_end_id,mandate_id,purpose_code,creditor_reference,counterparty_name,counterparty_account,counterparty_bic,btc_domain,btc_family,btc_subfamily,funds_code,supplementary_details,entry_reference,instructed_amount,instructed_currency,exchange_rate,charges_amount,status,additional_info,row_number,statement_opening_balance,statement_closing_balance
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-03,-10.00,D,false,NTRF,REF-0,,PAYMENT 0,,,,,,,,,,,,,,,,,,BOOK,,1,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-04,11.01,C,false,NTRF,REF-1,,PAYMENT 1,,,,,,,,,,,,,,,,,,BOOK,,2,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-03,12.02,C,false,NTRF,REF-2,,PAYMENT 2,,,,,,,,,,,,,,,,,,BOOK,,3,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-04,-13.03,D,false,NTRF,REF-3,,PAYMENT 3,,,,,,,,,,,,,,,,,,BOOK,,4,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-03,14.04,C,false,NTRF,REF-4,,PAYMENT 4,,,,,,,,,,,,,,,,,,BOOK,,5,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-04,15.05,C,false,NTRF,REF-5,,PAYMENT 5,,,,,,,,,,,,,,,,,,BOOK,,6,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-03,-16.06,D,false,NTRF,REF-6,,PAYMENT 6,,,,,,,,,,,,,,,,,,BOOK,,7,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-04,17.07,C,false,NTRF,REF-7,,PAYMENT 7,,,,,,,,,,,,,,,,,,BOOK,,8,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-03,18.08,C,false,NTRF,REF-8,,PAYMENT 8,,,,,,,,,,,,,,,,,,BOOK,,9,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-04,-19.09,D,false,NTRF,REF-9,,PAYMENT 9,,,,,,,,,,,,,,,,,,BOOK,,10,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-03,20.10,C,false,NTRF,REF-10,,PAYMENT 10,,,,,,,,,,,,,,,,,,BOOK,,11,500.00,570.30
+SYNTH-M02,DE75512108001245126199,,1,1,EUR,2026-01-03,2026-01-04,21.11,C,false,NTRF,REF-11,,PAYMENT 11,,,,,,,,,,,,,,,,,,BOOK,,12,500.00,570.30

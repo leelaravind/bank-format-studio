@@ -1,0 +1,15 @@
+{
+  "id": "G-M06",
+  "input": {
+    "file": "tests/fixtures/mt940/M06.sta",
+    "format": "mt940",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [],
+  "validation": {
+    "expected_result": "FAIL_PARSE",
+    "expected_errors": [
+      "E_MT940_PARSE"
+    ]
+  }
+}

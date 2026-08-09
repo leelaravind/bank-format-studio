@@ -200,4 +200,41 @@ def read_csv(transactions_csv: bytes, statements_csv: bytes,
         s = statements[sid]
         s.transactions.append(_tx_from_row(row, where, s.account_currency))
 
+    for s in statements.values():
+        s.transactions = _regroup_batches(s.transactions)
+
     return [statements[sid] for sid in order], report
+
+
+def _regroup_batches(transactions: list[Transaction]) -> list[Transaction]:
+    """Rows sharing a non-empty entry_reference are the exploded TxDtls of one
+    batch entry (CSV-FORMAT-STRATEGY §5); regroup them so the Ntry-level entry —
+    the reconciliation-authoritative unit — is reconstructed."""
+    out: list[Transaction] = []
+    i = 0
+    while i < len(transactions):
+        t = transactions[i]
+        j = i + 1
+        while (t.entry_reference and j < len(transactions)
+               and transactions[j].entry_reference == t.entry_reference):
+            j += 1
+        group = transactions[i:j]
+        if len(group) == 1:
+            out.append(t)
+        else:
+            net = sum((d.signed() for d in group), Decimal(0))
+            cd = CreditDebit.CREDIT if net >= 0 else CreditDebit.DEBIT
+            out.append(Transaction(
+                value_date=t.value_date,
+                booking_date=t.booking_date,
+                credit_debit=cd,
+                amount=abs(net),
+                is_reversal=t.is_reversal,
+                currency=t.currency,
+                swift_tx_type=t.swift_tx_type,
+                entry_reference=t.entry_reference,
+                status=t.status,
+                details=tuple(group),
+            ))
+        i = j
+    return out

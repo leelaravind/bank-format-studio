@@ -1,0 +1,37 @@
+[
+  {
+    "account_currency": "EUR",
+    "account_iban": "DE75512108001245126199",
+    "account_other_id": null,
+    "additional_info": null,
+    "closing_available": null,
+    "closing_balance": {
+      "amount": "250.00",
+      "credit_debit": "C",
+      "currency": "EUR",
+      "date": "2026-01-02"
+    },
+    "closing_is_intermediate": false,
+    "creation_datetime": null,
+    "electronic_seq_number": null,
+    "forward_available": [],
+    "from_datetime": null,
+    "opening_balance": {
+      "amount": "250.00",
+      "credit_debit": "C",
+      "currency": "EUR",
+      "date": "2026-01-02"
+    },
+    "opening_is_intermediate": false,
+    "other_balances": [],
+    "page_count": null,
+    "related_reference": null,
+    "sequence_number": 1,
+    "source_format": "mt940",
+    "statement_id": "SYNTH-M05",
+    "statement_number": 1,
+    "summary": null,
+    "to_datetime": null,
+    "transactions": []
+  }
+]

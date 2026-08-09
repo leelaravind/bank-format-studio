@@ -1,0 +1,2 @@
+﻿statement_id,account_iban,account_other_id,statement_number,sequence_number,currency,opening_balance_date,opening_balance,closing_balance_date,closing_balance,closing_available_balance,total_credits,total_debits,credit_count,debit_count,transaction_count,source_format,information_loss_flags
+SYNTH-M20,DE75512108001245126199,,1,1,EUR,2025-12-31,100.00,2026-01-02,90.00,,0,10.00,0,1,1,mt940,

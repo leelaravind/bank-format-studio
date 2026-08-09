@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
 from openpyxl import Workbook
@@ -45,12 +45,16 @@ def _cell_value(column: str, text: str, excel_safe: bool):
     return neutralize(text, column, excel_safe)
 
 
-def write_xlsx(statements: list[Statement],
-               excel_safe: bool = True) -> tuple[bytes, DiagnosticReport]:
+def write_xlsx(statements: list[Statement], excel_safe: bool = True,
+               created: "datetime | None" = None) -> tuple[bytes, DiagnosticReport]:
     # Reuse the CSV projection (single source of truth for the flat mapping),
     # in strict mode: neutralization for xlsx happens at cell level below.
     tx_bytes, st_bytes, report = write_csv(statements, excel_safe=False)
     workbook = Workbook()
+    # Deterministic output: pin document timestamps to the injected clock.
+    stamp = created or datetime(2000, 1, 1)
+    workbook.properties.created = stamp
+    workbook.properties.modified = stamp
     for title, payload in (("transactions", tx_bytes), ("statements", st_bytes)):
         sheet = workbook.active if title == "transactions" else workbook.create_sheet()
         sheet.title = title
@@ -65,4 +69,29 @@ def write_xlsx(statements: list[Statement],
             ])
     out = io.BytesIO()
     workbook.save(out)
-    return out.getvalue(), report
+    return _pin_zip_timestamps(out.getvalue(), stamp), report
+
+
+def _pin_zip_timestamps(payload: bytes, stamp: datetime) -> bytes:
+    """xlsx is a zip; member mtimes default to wall-clock time. Rewrite every
+    entry with the injected clock so output bytes are deterministic."""
+    import zipfile
+
+    fixed = (stamp.year, stamp.month, stamp.day, stamp.hour, stamp.minute, 0)
+    src = zipfile.ZipFile(io.BytesIO(payload))
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as dst:
+        for item in src.infolist():
+            info = zipfile.ZipInfo(item.filename, date_time=fixed)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = item.external_attr
+            content = src.read(item.filename)
+            if item.filename == "docProps/core.xml":
+                # openpyxl stamps dcterms:created/modified with wall-clock at
+                # save time; pin both to the injected clock.
+                import re
+                iso = stamp.strftime("%Y-%m-%dT%H:%M:%SZ").encode()
+                content = re.sub(rb"(<dcterms:(created|modified)[^>]*>)[^<]*(</dcterms:\2>)",
+                                 rb"\g<1>" + iso + rb"\g<3>", content)
+            dst.writestr(info, content)
+    return out.getvalue()

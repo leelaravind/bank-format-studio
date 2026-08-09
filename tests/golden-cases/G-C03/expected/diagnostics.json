@@ -1,0 +1,22 @@
+{
+  "codes": {
+    "csv": [],
+    "mt940": []
+  },
+  "loss": {
+    "csv": [
+      [
+        "remittance line structure",
+        "flattened",
+        "model->csv"
+      ]
+    ],
+    "mt940": [
+      [
+        "remittance line structure",
+        "flattened",
+        "model->mt940"
+      ]
+    ]
+  }
+}

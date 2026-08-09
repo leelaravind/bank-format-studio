@@ -1,0 +1,15 @@
+{
+  "id": "G-C10",
+  "input": {
+    "file": "tests/fixtures/camt053/C10.xml",
+    "format": "camt.053.001.02",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [],
+  "validation": {
+    "expected_result": "FAIL_SCHEMA",
+    "expected_errors": [
+      "E_CAMT_SCHEMA_INVALID"
+    ]
+  }
+}

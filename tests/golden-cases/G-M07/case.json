@@ -1,0 +1,15 @@
+{
+  "id": "G-M07",
+  "input": {
+    "file": "tests/fixtures/mt940/M07.sta",
+    "format": "mt940",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [],
+  "validation": {
+    "expected_result": "FAIL_PARSE",
+    "expected_errors": [
+      "E_BAD_CURRENCY"
+    ]
+  }
+}

@@ -29,6 +29,7 @@ from bfs_core.model import (
     CreditDebit,
     DiagnosticReport,
     EntryStatus,
+    LossKind,
     Statement,
     Transaction,
     TransactionsSummary,
@@ -367,6 +368,19 @@ def _map_statement(stmt: etree._Element, spec: VersionSpec, ns: dict[str, str],
     def _int_of(path: str) -> int | None:
         t = _text(stmt, path, ns)
         return int(t) if t and t.isdigit() else None
+
+    # Read-side fidelity: elements we deliberately do not map are recorded as loss,
+    # never silently ignored (FIDELITY rule).
+    for tag in ("Intrst", "RltdAcct", "RptgSrc", "CpyDplctInd"):
+        if _find(stmt, f"c:{tag}", ns) is not None:
+            report.loss(tag, f"camt.053.001.{spec.key}->model", LossKind.DROPPED,
+                        f"optional element {tag} is not carried by the normalized model", where)
+    for i, entry in enumerate(entries, 1):
+        for tag in ("Avlbty", "ComssnWvrInd", "TechInptChanl", "Intrst", "CorpActn"):
+            if _find(entry, f"c:{tag}", ns) is not None:
+                report.loss(tag, f"camt.053.001.{spec.key}->model", LossKind.DROPPED,
+                            f"optional element {tag} is not carried by the normalized model",
+                            f"{where}, entry {i}")
 
     frto = _find(stmt, "c:FrToDt", ns)
     return Statement(

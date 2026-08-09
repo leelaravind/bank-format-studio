@@ -9,19 +9,18 @@ from __future__ import annotations
 import csv
 import io
 
+from bfs_core.csvio.dialect import (
+    STATEMENTS_COLUMNS,
+    TRANSACTIONS_COLUMNS,
+    neutralize,
+)
 from bfs_core.model import (
-    CreditDebit,
     DiagnosticReport,
     LossKind,
     Statement,
     Transaction,
 )
 from bfs_core.reconcile import reconcile_statement
-from bfs_core.csvio.dialect import (
-    STATEMENTS_COLUMNS,
-    TRANSACTIONS_COLUMNS,
-    neutralize,
-)
 
 _DIRECTION = "model->csv"
 
@@ -150,5 +149,9 @@ def write_csv(statements: list[Statement],
         for _f in s.forward_available:
             report.loss("forward available balance", _DIRECTION, LossKind.DROPPED,
                         "FWAV balances have no CSV column", f"statement {s.statement_id!r}")
+        if s.summary is not None:
+            report.loss("transactions summary", _DIRECTION, LossKind.DROPPED,
+                        "declared TxsSummry figures are not exported (computed totals "
+                        "are in statements.csv instead)", f"statement {s.statement_id!r}")
 
     return _encode(tx_buf), _encode(st_buf), report

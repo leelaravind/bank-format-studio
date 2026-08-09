@@ -1,0 +1,37 @@
+{
+  "codes": {
+    "csv": [],
+    "mt940": []
+  },
+  "loss": {
+    "csv": [
+      [
+        "balance ITBD",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "balance PRCD",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "forward available balance",
+        "dropped",
+        "model->csv"
+      ]
+    ],
+    "mt940": [
+      [
+        "balance ITBD",
+        "dropped",
+        "model->mt940"
+      ],
+      [
+        "balance PRCD",
+        "dropped",
+        "model->mt940"
+      ]
+    ]
+  }
+}

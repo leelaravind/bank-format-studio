@@ -1,0 +1,22 @@
+{
+  "codes": {
+    "csv": [],
+    "mt940": []
+  },
+  "loss": {
+    "csv": [
+      [
+        "batch entry structure",
+        "flattened",
+        "model->csv"
+      ]
+    ],
+    "mt940": [
+      [
+        "batch details",
+        "flattened",
+        "model->mt940"
+      ]
+    ]
+  }
+}

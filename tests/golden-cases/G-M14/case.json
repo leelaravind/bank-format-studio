@@ -1,0 +1,37 @@
+{
+  "id": "G-M14",
+  "input": {
+    "file": "tests/fixtures/mt940/M14.sta",
+    "format": "mt940",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [
+    {
+      "target": "camt.053.001.02",
+      "expected_output": [
+        "output.camt.053.001.02.xml"
+      ]
+    },
+    {
+      "target": "csv",
+      "expected_output": [
+        "output.csv.transactions.csv",
+        "output.csv.statements.csv"
+      ]
+    }
+  ],
+  "reconciliation": {
+    "currency": "EUR",
+    "opening_balance": "100.00",
+    "closing_balance": "120.00",
+    "total_credits": "20.00",
+    "total_debits": "0",
+    "transaction_count": 1,
+    "credit_count": 1,
+    "debit_count": 0
+  },
+  "validation": {
+    "expected_result": "PASS",
+    "expected_warnings": []
+  }
+}

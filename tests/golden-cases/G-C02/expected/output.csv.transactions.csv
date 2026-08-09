@@ -1,0 +1,5 @@
+﻿statement_id,account_iban,account_other_id,statement_number,sequence_number,currency,booking_date,value_date,amount,credit_debit,reversal,transaction_type_code,customer_reference,bank_reference,remittance_info,end_to_end_id,mandate_id,purpose_code,creditor_reference,counterparty_name,counterparty_account,counterparty_bic,btc_domain,btc_family,btc_subfamily,funds_code,supplementary_details,entry_reference,instructed_amount,instructed_currency,exchange_rate,charges_amount,status,additional_info,row_number,statement_opening_balance,statement_closing_balance
+SYNTH-C02,DE75512108001245126199,,1,,EUR,2026-01-03,2026-01-03,100.00,C,false,NTRF,,,,,,,,,,,PMNT,RCDT,OTHR,,,,,,,,BOOK,,1,500.00,620.00
+SYNTH-C02,DE75512108001245126199,,1,,EUR,2026-01-03,2026-01-03,80.00,C,false,NTRF,,,,,,,,,,,PMNT,RCDT,OTHR,,,,,,,,BOOK,,2,500.00,620.00
+SYNTH-C02,DE75512108001245126199,,1,,EUR,2026-01-03,2026-01-03,40.00,C,false,NTRF,,,,,,,,,,,PMNT,RCDT,OTHR,,,,,,,,BOOK,,3,500.00,620.00
+SYNTH-C02,DE75512108001245126199,,1,,EUR,2026-01-03,2026-01-03,-100.00,D,false,NDDT,,,,,,,,,,,PMNT,IDDT,OTHR,,,,,,,,BOOK,,4,500.00,620.00

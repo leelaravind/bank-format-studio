@@ -1,0 +1,20 @@
+{
+  "codes": {
+    "camt.053.001.02": [
+      "W_ENTRY_DATE_YEAR_GUESSED"
+    ],
+    "csv": [
+      "W_ENTRY_DATE_YEAR_GUESSED"
+    ]
+  },
+  "loss": {
+    "camt.053.001.02": [
+      [
+        "sequence_number",
+        "dropped",
+        "model->camt.053.001.02"
+      ]
+    ],
+    "csv": []
+  }
+}

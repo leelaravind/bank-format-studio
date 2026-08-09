@@ -1,0 +1,33 @@
+{
+  "id": "G-M19",
+  "input": {
+    "file": "tests/fixtures/mt940/M19.sta",
+    "format": "mt940",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [
+    {
+      "target": "csv",
+      "expected_output": [
+        "output.csv.transactions.csv",
+        "output.csv.statements.csv"
+      ]
+    }
+  ],
+  "reconciliation": {
+    "currency": "JPY",
+    "opening_balance": "1000000",
+    "closing_balance": "1000999999989",
+    "total_credits": "999999999999",
+    "total_debits": "10.5",
+    "transaction_count": 2,
+    "credit_count": 1,
+    "debit_count": 1
+  },
+  "validation": {
+    "expected_result": "FAIL_RECONCILIATION",
+    "expected_warnings": [
+      "W_CURRENCY_DECIMALS"
+    ]
+  }
+}

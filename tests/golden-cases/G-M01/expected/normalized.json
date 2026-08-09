@@ -1,0 +1,100 @@
+[
+  {
+    "account_currency": "EUR",
+    "account_iban": "DE75512108001245126199",
+    "account_other_id": null,
+    "additional_info": null,
+    "closing_available": null,
+    "closing_balance": {
+      "amount": "1150.00",
+      "credit_debit": "C",
+      "currency": "EUR",
+      "date": "2026-01-03"
+    },
+    "closing_is_intermediate": false,
+    "creation_datetime": null,
+    "electronic_seq_number": null,
+    "forward_available": [],
+    "from_datetime": null,
+    "opening_balance": {
+      "amount": "1000.00",
+      "credit_debit": "C",
+      "currency": "EUR",
+      "date": "2026-01-02"
+    },
+    "opening_is_intermediate": false,
+    "other_balances": [],
+    "page_count": null,
+    "related_reference": null,
+    "sequence_number": 1,
+    "source_format": "mt940",
+    "statement_id": "SYNTH-M01",
+    "statement_number": 1,
+    "summary": null,
+    "to_datetime": null,
+    "transactions": [
+      {
+        "additional_info": null,
+        "amount": "200.00",
+        "bank_reference": "B-1",
+        "booking_date": "2026-01-03",
+        "btc": null,
+        "charges_amount": null,
+        "counterparty": null,
+        "credit_debit": "C",
+        "creditor_reference": null,
+        "currency": null,
+        "customer_reference": "NONREF",
+        "details": [],
+        "end_to_end_id": null,
+        "entry_reference": null,
+        "exchange_rate": null,
+        "funds_code": null,
+        "instructed_amount": null,
+        "instructed_currency": null,
+        "is_reversal": false,
+        "mandate_id": null,
+        "purpose_code": null,
+        "remittance_unstructured": [
+          "INVOICE 4711 ACME TOOLING GMBH"
+        ],
+        "return_reason": null,
+        "status": "BOOK",
+        "supplementary_details": null,
+        "swift_tx_type": "NTRF",
+        "value_date": "2026-01-03"
+      },
+      {
+        "additional_info": null,
+        "amount": "50.00",
+        "bank_reference": null,
+        "booking_date": "2026-01-03",
+        "btc": null,
+        "charges_amount": null,
+        "counterparty": null,
+        "credit_debit": "D",
+        "creditor_reference": null,
+        "currency": null,
+        "customer_reference": "CUST-1",
+        "details": [],
+        "end_to_end_id": null,
+        "entry_reference": null,
+        "exchange_rate": null,
+        "funds_code": null,
+        "instructed_amount": null,
+        "instructed_currency": null,
+        "is_reversal": false,
+        "mandate_id": null,
+        "purpose_code": null,
+        "remittance_unstructured": [
+          "CARD PAYMENT SUPERMARKET"
+        ],
+        "return_reason": null,
+        "status": "BOOK",
+        "supplementary_details": null,
+        "swift_tx_type": "NMSC",
+        "value_date": "2026-01-03"
+      }
+    ]
+  }
+]

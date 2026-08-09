@@ -1,0 +1,31 @@
+{
+  "id": "G-C06",
+  "input": {
+    "file": "tests/fixtures/camt053/C06.xml",
+    "format": "camt.053.001.02",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [
+    {
+      "target": "csv",
+      "expected_output": [
+        "output.csv.transactions.csv",
+        "output.csv.statements.csv"
+      ]
+    }
+  ],
+  "reconciliation": {
+    "currency": "EUR",
+    "opening_balance": "100.00",
+    "closing_balance": "175.00",
+    "total_credits": "50.00",
+    "total_debits": "0",
+    "transaction_count": 1,
+    "credit_count": 1,
+    "debit_count": 0
+  },
+  "validation": {
+    "expected_result": "FAIL_RECONCILIATION",
+    "expected_warnings": []
+  }
+}

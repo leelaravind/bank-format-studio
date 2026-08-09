@@ -12,14 +12,13 @@ AddtlStmtInf and recorded as LossNotes.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 
 import lxml.etree as etree
 
 from bfs_core.camt.validate import validate_bytes
 from bfs_core.camt.versions import VersionSpec
-from bfs_core.convert.btc_map import swift_to_btc
 from bfs_core.errors import E_INTERNAL, BfsError
 from bfs_core.model import (
     Balance,
@@ -62,6 +61,8 @@ def _btc_el(parent: etree._Element, t: Transaction, direction: str,
             report: DiagnosticReport, where: str) -> None:
     """BkTxCd is mandatory in Ntry. Preference: structured btc → mapped from SWIFT
     code → proprietary carry of the SWIFT code → PMNT/MCRD/OTHR fallback."""
+    from bfs_core.convert.btc_map import swift_to_btc  # deferred: avoids import cycle
+
     node = _el(parent, "BkTxCd")
     btc = t.btc
     if btc is not None and btc.domain and btc.family:
@@ -287,6 +288,37 @@ def write_camt053(statements: list[Statement], spec: VersionSpec,
             _bal_el(stmt_el, "FWAV", fwd)
         for code, balance in s.other_balances:
             _bal_el(stmt_el, code if len(code) == 4 else "INFO", balance)
+
+        if s.summary is not None:
+            sm = s.summary
+            summry = _el(stmt_el, "TxsSummry")
+            ttl = _el(summry, "TtlNtries")
+            if sm.total_count is not None:
+                _el(ttl, "NbOfNtries", str(sm.total_count))
+            if sm.total_sum is not None:
+                _el(ttl, "Sum", _fmt(sm.total_sum))
+            if sm.net_amount is not None and sm.net_credit_debit is not None:
+                if spec.key == "02":
+                    _el(ttl, "TtlNetNtryAmt", _fmt(sm.net_amount))
+                    _el(ttl, "CdtDbtInd",
+                        "CRDT" if sm.net_credit_debit is CreditDebit.CREDIT else "DBIT")
+                else:
+                    net = _el(ttl, "TtlNetNtry")
+                    _el(net, "Amt", _fmt(sm.net_amount))
+                    _el(net, "CdtDbtInd",
+                        "CRDT" if sm.net_credit_debit is CreditDebit.CREDIT else "DBIT")
+            if sm.credit_count is not None or sm.credit_sum is not None:
+                cdt = _el(summry, "TtlCdtNtries")
+                if sm.credit_count is not None:
+                    _el(cdt, "NbOfNtries", str(sm.credit_count))
+                if sm.credit_sum is not None:
+                    _el(cdt, "Sum", _fmt(sm.credit_sum))
+            if sm.debit_count is not None or sm.debit_sum is not None:
+                dbt = _el(summry, "TtlDbtNtries")
+                if sm.debit_count is not None:
+                    _el(dbt, "NbOfNtries", str(sm.debit_count))
+                if sm.debit_sum is not None:
+                    _el(dbt, "Sum", _fmt(sm.debit_sum))
 
         for i, t in enumerate(s.transactions, 1):
             _ntry_el(stmt_el, t, spec, s.account_currency, report,

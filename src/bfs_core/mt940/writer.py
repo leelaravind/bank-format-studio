@@ -16,9 +16,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from decimal import Decimal
 
-from bfs_core.convert.btc_map import btc_to_swift
 from bfs_core.errors import W_CHARSET_VIOLATION, W_REFERENCE_TRUNCATED
 from bfs_core.model import (
     CreditDebit,
@@ -86,6 +84,8 @@ def _ref16(value: str | None, default: str, report: DiagnosticReport, where: str
 
 
 def _tx_type(t: Transaction, report: DiagnosticReport, where: str) -> str:
+    from bfs_core.convert.btc_map import btc_to_swift  # deferred: avoids import cycle
+
     if t.swift_tx_type:
         code = t.swift_tx_type.upper()
         return code if len(code) == 4 else (code + "MSC")[:4]

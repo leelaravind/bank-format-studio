@@ -1,0 +1,39 @@
+{
+  "id": "G-M20",
+  "input": {
+    "file": "tests/fixtures/mt940/M20.sta",
+    "format": "mt940",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [
+    {
+      "target": "camt.053.001.02",
+      "expected_output": [
+        "output.camt.053.001.02.xml"
+      ]
+    },
+    {
+      "target": "csv",
+      "expected_output": [
+        "output.csv.transactions.csv",
+        "output.csv.statements.csv"
+      ]
+    }
+  ],
+  "reconciliation": {
+    "currency": "EUR",
+    "opening_balance": "100.00",
+    "closing_balance": "90.00",
+    "total_credits": "0",
+    "total_debits": "10.00",
+    "transaction_count": 1,
+    "credit_count": 0,
+    "debit_count": 1
+  },
+  "validation": {
+    "expected_result": "PASS",
+    "expected_warnings": [
+      "W_ENTRY_DATE_YEAR_GUESSED"
+    ]
+  }
+}

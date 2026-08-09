@@ -1,0 +1,22 @@
+{
+  "codes": {
+    "csv": [],
+    "mt940": []
+  },
+  "loss": {
+    "csv": [
+      [
+        "transactions summary",
+        "dropped",
+        "model->csv"
+      ]
+    ],
+    "mt940": [
+      [
+        "transactions summary",
+        "dropped",
+        "model->mt940"
+      ]
+    ]
+  }
+}

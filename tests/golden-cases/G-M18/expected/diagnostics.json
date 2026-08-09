@@ -1,0 +1,20 @@
+{
+  "codes": {
+    "camt.053.001.02": [
+      "W_UNKNOWN_TAG"
+    ],
+    "csv": [
+      "W_UNKNOWN_TAG"
+    ]
+  },
+  "loss": {
+    "camt.053.001.02": [
+      [
+        "sequence_number",
+        "dropped",
+        "model->camt.053.001.02"
+      ]
+    ],
+    "csv": []
+  }
+}

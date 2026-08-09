@@ -1,0 +1,37 @@
+{
+  "id": "G-C04",
+  "input": {
+    "file": "tests/fixtures/camt053/C04.xml",
+    "format": "camt.053.001.02",
+    "provenance": "SYNTHETIC"
+  },
+  "conversions": [
+    {
+      "target": "mt940",
+      "expected_output": [
+        "output.mt940.sta"
+      ]
+    },
+    {
+      "target": "csv",
+      "expected_output": [
+        "output.csv.transactions.csv",
+        "output.csv.statements.csv"
+      ]
+    }
+  ],
+  "reconciliation": {
+    "currency": "EUR",
+    "opening_balance": "100.00",
+    "closing_balance": "110.00",
+    "total_credits": "10.00",
+    "total_debits": "0",
+    "transaction_count": 1,
+    "credit_count": 1,
+    "debit_count": 0
+  },
+  "validation": {
+    "expected_result": "PASS",
+    "expected_warnings": []
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "codes": {
+    "csv": [
+      "W_NON_BOOKED_ENTRY"
+    ],
+    "mt940": [
+      "W_NON_BOOKED_ENTRY"
+    ]
+  },
+  "loss": {
+    "csv": [],
+    "mt940": [
+      [
+        "non-booked entry",
+        "dropped",
+        "model->mt940"
+      ]
+    ]
+  }
+}
