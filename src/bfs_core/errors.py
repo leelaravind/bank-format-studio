@@ -50,6 +50,8 @@ W_ENTRY_DATE_YEAR_GUESSED = "W_ENTRY_DATE_YEAR_GUESSED"
 W_IMPOSSIBLE_DATE = "W_IMPOSSIBLE_DATE"
 W_BATCH_SUM_MISMATCH = "W_BATCH_SUM_MISMATCH"
 W_RESTRICTED_SUBSET_SUSPECTED = "W_RESTRICTED_SUBSET_SUSPECTED"
+W_DANGLING_INTERMEDIATE = "W_DANGLING_INTERMEDIATE"
+W_REFERENCE_TRUNCATED = "W_REFERENCE_TRUNCATED"
 
 _CATALOG: dict[str, str] = {
     E_MT940_BAD_DC_MARK: "Unrecognized debit/credit mark {value!r} in :61: line — expected C, D, RC or RD ({where}).",
@@ -92,6 +94,8 @@ _CATALOG: dict[str, str] = {
     W_IMPOSSIBLE_DATE: "Impossible calendar date {value!r} ({where}); {detail}.",
     W_BATCH_SUM_MISMATCH: "Batch entry amount does not equal the sum of its detail transactions: {detail} ({where}).",
     W_RESTRICTED_SUBSET_SUSPECTED: "The file is schema-valid but violates a national subset convention: {detail} ({where}).",
+    W_DANGLING_INTERMEDIATE: "Statement {where} starts or ends with an intermediate balance (:60M:/:62M:) but no continuation page was found — the statement may be incomplete.",
+    W_REFERENCE_TRUNCATED: "Reference {value!r} exceeds the MT940 16-character limit and was truncated; the full value was preserved in :86: ({where}).",
 }
 
 
