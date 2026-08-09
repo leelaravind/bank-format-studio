@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bank-format-studio"
+version = "1.0.0"
+description = "Bank Statement Format Studio — offline MT940 / ISO 20022 camt.053 / CSV converter"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+dependencies = [
+    "mt-940==5.0.0",
+    "lxml==6.1.1",
+    "xmlschema==4.3.2",
+    "defusedxml==0.7.1",
+    "openpyxl==3.1.5",
+]
+
+[project.optional-dependencies]
+gui = ["PySide6-Essentials==6.11.1"]
+dev = ["pytest==8.*", "ruff", "pip-licenses"]
+build = ["pyinstaller"]
+
+[project.scripts]
+bfs = "bfs_cli.main:main"
+
+[project.gui-scripts]
+bank-format-studio = "bfs_app.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bfs_core = ["camt/schemas/*.xsd", "convert/data/*.json", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "security: security suite (S-fixtures, socket-blocking harness)",
+    "golden: golden conversion cases",
+    "gui: requires PySide6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "S110", "S112"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]

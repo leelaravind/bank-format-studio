@@ -1,0 +1,5 @@
+[console_scripts]
+bfs = bfs_cli.main:main
+
+[gui_scripts]
+bank-format-studio = bfs_app.main:main

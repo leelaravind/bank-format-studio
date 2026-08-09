@@ -1,0 +1,16 @@
+mt-940==5.0.0
+lxml==6.1.1
+xmlschema==4.3.2
+defusedxml==0.7.1
+openpyxl==3.1.5
+
+[build]
+pyinstaller
+
+[dev]
+pytest==8.*
+ruff
+pip-licenses
+
+[gui]
+PySide6-Essentials==6.11.1

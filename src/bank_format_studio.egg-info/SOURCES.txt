@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/bank_format_studio.egg-info/PKG-INFO
+src/bank_format_studio.egg-info/SOURCES.txt
+src/bank_format_studio.egg-info/dependency_links.txt
+src/bank_format_studio.egg-info/entry_points.txt
+src/bank_format_studio.egg-info/requires.txt
+src/bank_format_studio.egg-info/top_level.txt
+src/bfs_app/__init__.py
+src/bfs_cli/__init__.py
+src/bfs_core/__init__.py
+src/bfs_core/py.typed
