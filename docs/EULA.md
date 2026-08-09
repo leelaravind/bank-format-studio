@@ -2,8 +2,8 @@
 
 **Publisher:** Leela Aravind Karlapudi, publishing under the ITISYOU brand
 **Product:** Bank Statement Format Studio (the "Software")
-**Release date:** [RELEASE DATE]
-**Support contact:** [INSERT SUPPORT EMAIL OR SUPPORT URL]
+**Release date:** 10 August 2026
+**Support contact:** support@itisyou.app
 
 IMPORTANT — READ CAREFULLY. By installing, copying or otherwise using the
 Software you agree to be bound by this End-User Licence Agreement ("EULA").
@@ -97,6 +97,6 @@ Wales shall have non-exclusive jurisdiction.
 ## 11. Contact
 
 Questions about this EULA or the Software:
-[INSERT SUPPORT EMAIL OR SUPPORT URL]
+support@itisyou.app
 
 (c) 2026 Leela Aravind Karlapudi. All rights reserved.

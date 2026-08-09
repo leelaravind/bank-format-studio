@@ -28,13 +28,15 @@ def test_eula_files_exist_and_are_synchronized():
     assert _normalized(EULA_MD.read_text("utf-8")) == _normalized(EULA_TXT.read_text("utf-8"))
 
 
-def test_eula_release_placeholders_still_open():
-    # [RELEASE DATE] / support contact are owner-supplied at release time and
-    # must never be silently invented.
+def test_eula_release_values_filled():
+    # Owner-supplied release values (V1 freeze, Step 6): the placeholders are
+    # resolved and must not reappear.
     for path in (EULA_MD, EULA_TXT):
         text = path.read_text("utf-8")
-        assert "[RELEASE DATE]" in text
-        assert "[INSERT SUPPORT EMAIL OR SUPPORT URL]" in text
+        assert "[RELEASE DATE]" not in text
+        assert "[INSERT SUPPORT EMAIL OR SUPPORT URL]" not in text
+        assert "10 August 2026" in text
+        assert text.count("support@itisyou.app") == 2
 
 
 def test_eula_carries_locked_licence_model():

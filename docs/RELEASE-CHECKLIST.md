@@ -40,9 +40,9 @@ the owner holds; engineering must never fake them.
 
 ## OWNER actions
 
-- [ ] Fill the EULA release placeholders `[RELEASE DATE]` and
-      `[INSERT SUPPORT EMAIL OR SUPPORT URL]` in **both** `docs/EULA.md` and
-      `packaging/EULA.txt` (keep the two files in sync)
+- [x] EULA release values filled in **both** `docs/EULA.md` and
+      `packaging/EULA.txt` (kept in sync): release date 10 August 2026,
+      support contact support@itisyou.app (owner-supplied at Step 6 freeze)
 
 - [ ] Signing track for this release recorded. V1 default: **unsigned £0 path**
       per `docs/UNSIGNED-RELEASE-POLICY.md` — **never presented as signed.**
