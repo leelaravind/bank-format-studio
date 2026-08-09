@@ -5,6 +5,11 @@ the owner holds; engineering must never fake them.
 
 ## Automated (enforced by `packaging/build.ps1` + CI)
 
+- [x] GitHub Actions CI active at `.github/workflows/ci.yml` (test matrix
+      3.12/3.13/3.14: ruff, licence gate + self-test, unit/golden/security;
+      gui offscreen; hashed-install proof). First GREEN run 2026-08-09:
+      https://github.com/leelaravind/bank-format-studio/actions/runs/31340087157
+
 - [ ] `python tools/licence_gate.py` passes (zero GPL/AGPL, LGPL only via documented exceptions)
 - [ ] `pytest tests -q` fully green (unit + golden + security + GUI)
 - [ ] Security suite ran under the socket-blocking harness (part of the full run)
