@@ -58,7 +58,7 @@ def format_swift_amount(amount: Decimal) -> str:
     if amount < 0:
         raise BfsError(E_MT940_BAD_AMOUNT, value=str(amount), where="serializer",
                        detail="MT940 amounts are unsigned; sign belongs in the D/C mark")
-    text = format(amount.normalize() if amount == amount.to_integral() else amount, "f")
+    text = format(amount, "f")
     if "." in text:
         int_part, frac = text.split(".")
         return f"{int_part},{frac}"

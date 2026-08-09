@@ -72,7 +72,9 @@ def _clean(value: str) -> str:
 
 def _parse_nl(text: str) -> Parsed86:
     result = Parsed86(style="nl_structured")
-    flat = " ".join(text.splitlines())
+    # Slash-convention :86: wraps at 65 chars mid-token (Rabobank-style);
+    # continuation lines concatenate directly, never with an injected space.
+    flat = "".join(text.splitlines())
     parts = _NL_SPLIT_RE.split(flat)
     # parts = [prefix, CODE, value, CODE, value, ...]
     prefix = parts[0].strip().strip("/")

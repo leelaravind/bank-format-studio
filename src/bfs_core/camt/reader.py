@@ -166,7 +166,9 @@ def _tx_details(txdtls: etree._Element, entry_cd: CreditDebit, value_date: date,
                 booking_date: date | None, spec: VersionSpec,
                 ns: dict[str, str]) -> Transaction:
     refs = _find(txdtls, "c:Refs", ns)
-    amt = _amount_of(_find(txdtls, "c:Amt", ns))
+    # .08 has TxDtls/Amt directly; .02 batch details carry AmtDtls/TxAmt/Amt (GATE-2).
+    amt = _amount_of(_find(txdtls, "c:Amt", ns)) or \
+        _amount_of(_find(txdtls, "c:AmtDtls/c:TxAmt/c:Amt", ns))
     cd_text = _text(txdtls, "c:CdtDbtInd", ns)
     cd = _cd_of(cd_text) if cd_text else entry_cd
 
@@ -248,10 +250,13 @@ def _entry_of(ntry: etree._Element, account_currency: str, spec: VersionSpec,
             report.warning(W_BATCH_SUM_MISMATCH, where=where,
                            detail=f"entry {entry_signed} vs details sum {detail_sum}")
 
+    entry_charges = _text(ntry, "c:Chrgs/c:TtlChrgsAndTaxAmt", ns) or \
+        _text(ntry, "c:Chrgs/c:Amt", ns) or _text(ntry, "c:Chrgs/c:Rcrd/c:Amt", ns)
     entry = Transaction(
         value_date=effective_value,
         booking_date=booking_date,
         credit_debit=cd,
+        charges_amount=Decimal(entry_charges) if entry_charges else None,
         is_reversal=(_text(ntry, "c:RvslInd", ns) == "true"),
         amount=amt[0],
         currency=None if amt[1] == account_currency else amt[1],
@@ -274,7 +279,7 @@ def _entry_of(ntry: etree._Element, account_currency: str, spec: VersionSpec,
         entry.instructed_amount = base.instructed_amount
         entry.instructed_currency = base.instructed_currency
         entry.exchange_rate = base.exchange_rate
-        entry.charges_amount = base.charges_amount
+        entry.charges_amount = base.charges_amount or entry.charges_amount
         if base.additional_info:
             entry.additional_info = (
                 f"{entry.additional_info} | {base.additional_info}"

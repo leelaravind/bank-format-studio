@@ -1,0 +1,203 @@
+"""CSV import: (transactions.csv, statements.csv) → Statements.
+
+Import accepts ONLY the product's own documented dialect (locked V1 guardrail).
+statements.csv is authoritative for balances; derived per-row balance columns are
+cross-checked, not trusted. Nothing is ever evaluated (SEC-17).
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+from datetime import date
+from decimal import Decimal, InvalidOperation
+
+from bfs_core.csvio.dialect import (
+    STATEMENTS_COLUMNS,
+    TRANSACTIONS_REQUIRED,
+    deneutralize,
+)
+from bfs_core.errors import (
+    E_CSV_BAD_VALUE,
+    E_CSV_INCONSISTENT,
+    E_CSV_MISSING_COLUMN,
+    BfsError,
+)
+from bfs_core.model import (
+    Balance,
+    BankTransactionCode,
+    Counterparty,
+    CreditDebit,
+    DiagnosticReport,
+    EntryStatus,
+    Statement,
+    Transaction,
+    validate_currency,
+)
+from bfs_core.security import DEFAULT_LIMITS, Limits
+
+
+def _decode(data: bytes) -> str:
+    if data.startswith(b"\xef\xbb\xbf"):
+        data = data[3:]
+    return data.decode("utf-8")
+
+
+def _rows(data: bytes, required: list[str], which: str,
+          limits: Limits) -> list[dict[str, str]]:
+    limits.check_size(len(data), which)
+    reader = csv.DictReader(io.StringIO(_decode(data)))
+    header = reader.fieldnames or []
+    for column in required:
+        if column not in header:
+            raise BfsError(E_CSV_MISSING_COLUMN, value=column, where=which)
+    out = []
+    for i, row in enumerate(reader, 2):
+        out.append({k: deneutralize(v) if isinstance(v, str) else "" for k, v in row.items()})
+        limits.check_count(i, f"{which} rows")
+    return out
+
+
+def _dec(row: dict[str, str], column: str, where: str) -> Decimal | None:
+    raw = (row.get(column) or "").strip()
+    if not raw:
+        return None
+    try:
+        return Decimal(raw)
+    except InvalidOperation as exc:
+        raise BfsError(E_CSV_BAD_VALUE, value=raw, column=column, where=where,
+                       detail="not a decimal number") from exc
+
+
+def _date(row: dict[str, str], column: str, where: str) -> date | None:
+    raw = (row.get(column) or "").strip()
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError as exc:
+        raise BfsError(E_CSV_BAD_VALUE, value=raw, column=column, where=where,
+                       detail="expected YYYY-MM-DD") from exc
+
+
+def _get(row: dict[str, str], column: str) -> str | None:
+    value = (row.get(column) or "").strip()
+    return value or None
+
+
+def _tx_from_row(row: dict[str, str], where: str, statement_currency: str) -> Transaction:
+    amount = _dec(row, "amount", where)
+    if amount is None:
+        raise BfsError(E_CSV_BAD_VALUE, value="", column="amount", where=where,
+                       detail="amount is required")
+    cd_text = _get(row, "credit_debit")
+    if cd_text not in ("C", "D"):
+        raise BfsError(E_CSV_BAD_VALUE, value=cd_text or "", column="credit_debit",
+                       where=where, detail="expected C or D")
+    cd = CreditDebit(cd_text)
+    if (amount < 0) != (cd is CreditDebit.DEBIT) and amount != 0:
+        raise BfsError(E_CSV_INCONSISTENT, where=where,
+                       detail=f"amount {amount} sign contradicts credit_debit {cd.value}")
+    value_date = _date(row, "value_date", where)
+    if value_date is None:
+        raise BfsError(E_CSV_BAD_VALUE, value="", column="value_date", where=where,
+                       detail="value_date is required")
+    status_text = _get(row, "status") or "BOOK"
+    try:
+        status = EntryStatus(status_text)
+    except ValueError as exc:
+        raise BfsError(E_CSV_BAD_VALUE, value=status_text, column="status",
+                       where=where, detail="expected BOOK, PDNG or INFO") from exc
+    row_currency = _get(row, "currency")
+    btc = None
+    if _get(row, "btc_domain") or _get(row, "btc_family"):
+        btc = BankTransactionCode(domain=_get(row, "btc_domain"),
+                                  family=_get(row, "btc_family"),
+                                  sub_family=_get(row, "btc_subfamily"))
+    cp = None
+    if _get(row, "counterparty_name") or _get(row, "counterparty_account") or _get(row, "counterparty_bic"):
+        cp = Counterparty(name=_get(row, "counterparty_name"),
+                          account=_get(row, "counterparty_account"),
+                          bic=_get(row, "counterparty_bic"))
+    remittance = _get(row, "remittance_info")
+    return Transaction(
+        value_date=value_date,
+        booking_date=_date(row, "booking_date", where),
+        credit_debit=cd,
+        is_reversal=(_get(row, "reversal") == "true"),
+        amount=abs(amount),
+        currency=None if not row_currency or row_currency == statement_currency else row_currency,
+        swift_tx_type=_get(row, "transaction_type_code"),
+        btc=btc,
+        customer_reference=_get(row, "customer_reference"),
+        bank_reference=_get(row, "bank_reference"),
+        end_to_end_id=_get(row, "end_to_end_id"),
+        mandate_id=_get(row, "mandate_id"),
+        supplementary_details=_get(row, "supplementary_details"),
+        counterparty=cp,
+        remittance_unstructured=(remittance,) if remittance else (),
+        creditor_reference=_get(row, "creditor_reference"),
+        purpose_code=_get(row, "purpose_code"),
+        return_reason=None,
+        funds_code=_get(row, "funds_code"),
+        instructed_amount=_dec(row, "instructed_amount", where),
+        instructed_currency=_get(row, "instructed_currency"),
+        exchange_rate=_dec(row, "exchange_rate", where),
+        charges_amount=_dec(row, "charges_amount", where),
+        entry_reference=_get(row, "entry_reference"),
+        status=status,
+        additional_info=_get(row, "additional_info"),
+    )
+
+
+def read_csv(transactions_csv: bytes, statements_csv: bytes,
+             limits: Limits = DEFAULT_LIMITS) -> tuple[list[Statement], DiagnosticReport]:
+    report = DiagnosticReport()
+    st_rows = _rows(statements_csv, STATEMENTS_COLUMNS[:10], "statements.csv", limits)
+    tx_rows = _rows(transactions_csv, TRANSACTIONS_REQUIRED, "transactions.csv", limits)
+    if not st_rows:
+        raise BfsError(E_CSV_INCONSISTENT, where="statements.csv", detail="no statement rows")
+
+    statements: dict[str, Statement] = {}
+    order: list[str] = []
+    for i, row in enumerate(st_rows, 2):
+        where = f"statements.csv row {i}"
+        sid = _get(row, "statement_id")
+        if not sid:
+            raise BfsError(E_CSV_BAD_VALUE, value="", column="statement_id", where=where,
+                           detail="statement_id is required")
+        currency = validate_currency(_get(row, "currency") or "", where=where)
+        ob = _dec(row, "opening_balance", where)
+        cb = _dec(row, "closing_balance", where)
+        ob_date = _date(row, "opening_balance_date", where)
+        cb_date = _date(row, "closing_balance_date", where)
+        if ob is None or cb is None or ob_date is None or cb_date is None:
+            raise BfsError(E_CSV_BAD_VALUE, value="", column="opening/closing balance",
+                           where=where, detail="balances and their dates are required")
+        cav = _dec(row, "closing_available_balance", where)
+        number_text = _get(row, "statement_number")
+        seq_text = _get(row, "sequence_number")
+        statements[sid] = Statement(
+            statement_id=sid,
+            account_iban=_get(row, "account_iban"),
+            account_other_id=_get(row, "account_other_id"),
+            account_currency=currency,
+            statement_number=int(number_text) if number_text else None,
+            sequence_number=int(seq_text) if seq_text else None,
+            opening_balance=Balance.from_signed(ob, ob_date, currency),
+            closing_balance=Balance.from_signed(cb, cb_date, currency),
+            closing_available=Balance.from_signed(cav, cb_date, currency) if cav is not None else None,
+            source_format="csv",
+        )
+        order.append(sid)
+
+    for i, row in enumerate(tx_rows, 2):
+        where = f"transactions.csv row {i}"
+        sid = _get(row, "statement_id")
+        if not sid or sid not in statements:
+            raise BfsError(E_CSV_INCONSISTENT, where=where,
+                           detail=f"statement_id {sid!r} has no row in statements.csv")
+        s = statements[sid]
+        s.transactions.append(_tx_from_row(row, where, s.account_currency))
+
+    return [statements[sid] for sid in order], report

@@ -1,0 +1,29 @@
+{
+  "_comment": "Best-effort SWIFT :61: transaction type code <-> ISO 20022 Bank Transaction Code mapping (IMPLEMENTATION-PLAN.md §7). Reviewable data, never a hard failure: unmapped camt codes degrade to NMSC with a loss note; unmapped SWIFT codes are carried as proprietary.",
+  "swift_to_btc": {
+    "NTRF": {"domain": "PMNT", "family": "RCDT", "sub_family": "OTHR"},
+    "NSTO": {"domain": "PMNT", "family": "ICDT", "sub_family": "STDO"},
+    "NDDT": {"domain": "PMNT", "family": "IDDT", "sub_family": "OTHR"},
+    "NCHK": {"domain": "PMNT", "family": "ICHQ", "sub_family": "OTHR"},
+    "NCLR": {"domain": "PMNT", "family": "ICHQ", "sub_family": "OTHR"},
+    "NCHG": {"domain": "ACMT", "family": "MDOP", "sub_family": "CHRG"},
+    "NCOM": {"domain": "ACMT", "family": "MDOP", "sub_family": "COMM"},
+    "NINT": {"domain": "ACMT", "family": "MCOP", "sub_family": "INTR"},
+    "NFEX": {"domain": "FORX", "family": "SPOT", "sub_family": "OTHR"},
+    "NTCK": {"domain": "PMNT", "family": "CCRD", "sub_family": "OTHR"},
+    "NMSC": {"domain": "PMNT", "family": "MCRD", "sub_family": "OTHR"}
+  },
+  "btc_family_to_swift": {
+    "PMNT/RCDT": "NTRF",
+    "PMNT/ICDT": "NTRF",
+    "PMNT/IDDT": "NDDT",
+    "PMNT/RDDT": "NDDT",
+    "PMNT/ICHQ": "NCHK",
+    "PMNT/RCHQ": "NCHK",
+    "PMNT/CCRD": "NTCK",
+    "PMNT/MCRD": "NTCK",
+    "ACMT/MDOP": "NCHG",
+    "ACMT/MCOP": "NINT",
+    "FORX/SPOT": "NFEX"
+  }
+}
