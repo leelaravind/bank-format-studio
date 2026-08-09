@@ -54,10 +54,10 @@ build pipeline re-ran the full suite again as its step 2/8.
   run [31340087157](https://github.com/leelaravind/bank-format-studio/actions/runs/31340087157)
   (success, all 5 jobs) and docs-only run
   [31340205419](https://github.com/leelaravind/bank-format-studio/actions/runs/31340205419)
-  (success). The freeze commit itself (EULA values + tests + this report)
-  triggers a further run; its verdict is recorded in the commit history /
-  final Step 6 report once GitHub completes it. The frozen binaries are not
-  affected by that run (they are built from this same tree).
+  (success). The freeze commit `cf96648` itself also completed GREEN:
+  run [31342941152](https://github.com/leelaravind/bank-format-studio/actions/runs/31342941152)
+  (success, all 5 jobs — includes the updated EULA-values tests). The frozen
+  binaries are built from this same tree and are not affected by that run.
 
 ## Build Result
 
