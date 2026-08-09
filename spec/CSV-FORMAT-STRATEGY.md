@@ -86,10 +86,9 @@ summary file rather than trusting per-row repetition).
 - CSV → MT940/camt.053 is "reconstruction from core fields": output is valid and
   balance-consistent but cannot resurrect structure the CSV never carried.
 
-## 6. Open decisions for the implementation plan (not decided now)
+## 6. Open decisions — RESOLVED in spec/IMPLEMENTATION-PLAN.md §2 (2026-08-09)
 
-1. `NONREF` handling (normalize vs pass through verbatim).
-2. Whether Excel export (.xlsx via openpyxl) is a straight rendering of these same
-   two tables (recommended) or adds a formatted report sheet.
-3. Column name casing convention (`snake_case` proposed).
-4. Whether statements.csv is mandatory on every export or opt-in.
+1. `NONREF`: passed through verbatim; empty cell = absent.
+2. XLSX export = straight rendering of the same two tables as worksheets; no report sheet in V1.
+3. Column names: `snake_case` confirmed.
+4. `statements.csv`: mandatory on every export; no single-file mode in V1.

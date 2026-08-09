@@ -117,9 +117,9 @@ therefore "reconstruction from core fields", flagged as such.
   requirement, not a nice-to-have, and is reflected in golden-case structure
   (`EXPECTED INFORMATION-LOSS NOTES`).
 
-## 3. Open items to confirm against collected sources
+## 3. Open items — ALL RESOLVED in spec/IMPLEMENTATION-PLAN.md §1 (2026-08-09)
 
-- [ ] Confirm `:61:` D/C mark full value set (C, D, RC, RD; some references list `EC/ED` expected marks for MT942 only) against at least two independent public references.
-- [ ] Confirm camt.053.001.02 vs .001.08 element differences that affect the model (e.g. `Pty` wrapper introduced for parties in later versions, `RvslInd` availability — verify in downloaded XSDs).
-- [ ] Confirm `:28C:` sequence semantics vs `LglSeqNb`/`ElctrncSeqNb` mapping against public bank guides.
-- [ ] Decide V1 structured-`:86:` output convention (candidates: SWIFT-style `/EREF/.../REMI/...` vs German GVC `?nn` subfields) after reviewing collected bank variant evidence.
+- [x] **GATE-1** `:61:` D/C mark value set = `{C, D, RC, RD}` — confirmed by Rabobank spec + kontopruef.de + mt-940 parser behaviour; `EC/ED` rejected with `E_MT940_BAD_DC_MARK`.
+- [x] **GATE-2** .02 vs .08 differences enumerated from the bundled XSDs: `RvslInd` optional in both; parties `PartyIdentification32` vs `Party40Choice`; `StmtPgntn` only in .08; balance codes closed enum vs external set; `TotalTransactions2` vs `TotalTransactions6`. Version adapters at the XML boundary; model stays version-neutral.
+- [x] **GATE-3** `:28C:` statement number ↔ `LglSeqNb`; page number ↔ `StmtPgntn` (.08) / merged-with-loss-note (.02); camt→MT940 fallback order `LglSeqNb` → `ElctrncSeqNb` → `1`.
+- [x] **GATE-4** V1 `:86:` output convention = SWIFT slash code words (`/EREF/`, `/BENM/`, `/REMI/`, …); German GVC remains input-only.
