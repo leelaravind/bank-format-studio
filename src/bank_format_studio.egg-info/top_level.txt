@@ -1,3 +1,0 @@
-bfs_app
-bfs_cli
-bfs_core
