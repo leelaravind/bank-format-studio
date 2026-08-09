@@ -10,12 +10,24 @@ Every heuristic (encoding fallback, entry-date year, page merge) emits a diagnos
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from datetime import date
 
 import mt940 as mt940lib
 from mt940.tags import StatementASNB
+
+# SEC-10/SEC-11: the mt940 library traces raw statement content (references,
+# names, IBANs) at DEBUG level. Cap it so a globally-enabled DEBUG session never
+# leaks document data; explicit opt-in re-enables it for support diagnostics.
+logging.getLogger("mt940").setLevel(logging.WARNING)
+
+
+def enable_verbose_parse_tracing() -> None:
+    """Explicit opt-in (SEC-11): re-enables the mt940 library's raw parse tracing.
+    Callers must warn the user that traces contain full statement data."""
+    logging.getLogger("mt940").setLevel(logging.DEBUG)
 
 from bfs_core.errors import (
     E_MT940_BAD_DC_MARK,

@@ -1,0 +1,8 @@
+# Golden expected outputs and fixtures are byte-exact test evidence: never
+# convert their line endings, on any platform.
+tests/golden-cases/** -text
+tests/fixtures/** -text
+sample-data/** -text
+references/** -text
+*.xlsx binary
+*.pdf binary
