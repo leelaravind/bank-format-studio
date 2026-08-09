@@ -13,7 +13,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from bfs_core.csvio.dialect import (
-    STATEMENTS_COLUMNS,
+    STATEMENTS_REQUIRED,
     TRANSACTIONS_REQUIRED,
     deneutralize,
 )
@@ -150,22 +150,43 @@ def _tx_from_row(row: dict[str, str], where: str, statement_currency: str) -> Tr
     )
 
 
+def _occurrence_key(row: dict[str, str], sid: str, ordinal_counts: dict[str, int],
+                    where: str) -> tuple[str, int]:
+    """B-2: statement identity is (statement_id, statement_occurrence). When the
+    column is absent (dialect v1.0 files) the ordinal of appearance substitutes —
+    unambiguous only while statement_ids are unique, which is validated by the caller."""
+    occ_text = _get(row, "statement_occurrence")
+    if occ_text is not None:
+        if not occ_text.isdigit() or int(occ_text) < 1:
+            raise BfsError(E_CSV_BAD_VALUE, value=occ_text, column="statement_occurrence",
+                           where=where, detail="expected a positive integer")
+        return sid, int(occ_text)
+    ordinal_counts[sid] = ordinal_counts.get(sid, 0) + 1
+    return sid, ordinal_counts[sid]
+
+
 def read_csv(transactions_csv: bytes, statements_csv: bytes,
              limits: Limits = DEFAULT_LIMITS) -> tuple[list[Statement], DiagnosticReport]:
     report = DiagnosticReport()
-    st_rows = _rows(statements_csv, STATEMENTS_COLUMNS[:10], "statements.csv", limits)
+    st_rows = _rows(statements_csv, STATEMENTS_REQUIRED, "statements.csv", limits)
     tx_rows = _rows(transactions_csv, TRANSACTIONS_REQUIRED, "transactions.csv", limits)
     if not st_rows:
         raise BfsError(E_CSV_INCONSISTENT, where="statements.csv", detail="no statement rows")
 
-    statements: dict[str, Statement] = {}
-    order: list[str] = []
+    statements: dict[tuple[str, int], Statement] = {}
+    order: list[tuple[str, int]] = []
+    st_ordinals: dict[str, int] = {}
+    has_occurrence_column = any("statement_occurrence" in row for row in st_rows[:1])
     for i, row in enumerate(st_rows, 2):
         where = f"statements.csv row {i}"
         sid = _get(row, "statement_id")
         if not sid:
             raise BfsError(E_CSV_BAD_VALUE, value="", column="statement_id", where=where,
                            detail="statement_id is required")
+        key = _occurrence_key(row, sid, st_ordinals, where)
+        if key in statements:
+            raise BfsError(E_CSV_INCONSISTENT, where=where,
+                           detail=f"duplicate statement identity {key[0]!r} occurrence {key[1]}")
         currency = validate_currency(_get(row, "currency") or "", where=where)
         ob = _dec(row, "opening_balance", where)
         cb = _dec(row, "closing_balance", where)
@@ -177,7 +198,7 @@ def read_csv(transactions_csv: bytes, statements_csv: bytes,
         cav = _dec(row, "closing_available_balance", where)
         number_text = _get(row, "statement_number")
         seq_text = _get(row, "sequence_number")
-        statements[sid] = Statement(
+        statements[key] = Statement(
             statement_id=sid,
             account_iban=_get(row, "account_iban"),
             account_other_id=_get(row, "account_other_id"),
@@ -189,21 +210,47 @@ def read_csv(transactions_csv: bytes, statements_csv: bytes,
             closing_available=Balance.from_signed(cav, cb_date, currency) if cav is not None else None,
             source_format="csv",
         )
-        order.append(sid)
+        order.append(key)
 
+    # Ambiguity guard: duplicate statement_ids without an occurrence column can
+    # not be mapped to transaction rows deterministically.
+    id_counts: dict[str, int] = {}
+    for key in order:
+        id_counts[key[0]] = id_counts.get(key[0], 0) + 1
+    duplicated_ids = {sid for sid, n in id_counts.items() if n > 1}
+    if duplicated_ids and not has_occurrence_column:
+        raise BfsError(
+            E_CSV_INCONSISTENT, where="statements.csv",
+            detail=f"statement_id(s) {sorted(duplicated_ids)} appear more than once but the "
+                   "file has no statement_occurrence column (dialect v1.1) to distinguish them")
+
+    tx_ordinals: dict[str, int] = {}
     for i, row in enumerate(tx_rows, 2):
         where = f"transactions.csv row {i}"
         sid = _get(row, "statement_id")
-        if not sid or sid not in statements:
+        if not sid:
             raise BfsError(E_CSV_INCONSISTENT, where=where,
-                           detail=f"statement_id {sid!r} has no row in statements.csv")
-        s = statements[sid]
+                           detail="transaction row lacks a statement_id")
+        occ_text = _get(row, "statement_occurrence")
+        if occ_text is not None:
+            key = _occurrence_key(row, sid, tx_ordinals, where)
+        elif sid in duplicated_ids:
+            raise BfsError(E_CSV_INCONSISTENT, where=where,
+                           detail=f"statement_id {sid!r} is duplicated but this transaction "
+                                  "row has no statement_occurrence value")
+        else:
+            key = (sid, 1)
+        if key not in statements:
+            raise BfsError(E_CSV_INCONSISTENT, where=where,
+                           detail=f"statement identity {key[0]!r} occurrence {key[1]} "
+                                  "has no row in statements.csv")
+        s = statements[key]
         s.transactions.append(_tx_from_row(row, where, s.account_currency))
 
     for s in statements.values():
         s.transactions = _regroup_batches(s.transactions)
 
-    return [statements[sid] for sid in order], report
+    return [statements[key] for key in order], report
 
 
 def _regroup_batches(transactions: list[Transaction]) -> list[Transaction]:

@@ -15,6 +15,13 @@ Honest generation protocol:
   and the authored figures. Golden tests then byte-compare forever.
 
 Run:  python tools/gen_fixtures.py   (deterministic; rewrites tests/fixtures + tests/golden-cases)
+
+Golden regeneration log (spec/fidelity reasons only — never to green a defect):
+- 2026-08-09 audit remediation: outputs legitimately changed by B-1 (/CREF//ASREF/
+  full-reference spill in :86:), B-2 (statement_occurrence CSV column, dialect
+  v1.1), C-1 (.02 mixed-direction batch amounts omitted), C-2/C-3 (previously
+  silent drops/truncations now emit loss notes; .08 StmtPgntn carries the page
+  number; dangling :60M: preserved), and expanded diagnostics parity.
 """
 
 from __future__ import annotations

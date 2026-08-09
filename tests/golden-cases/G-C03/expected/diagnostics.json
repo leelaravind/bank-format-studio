@@ -6,8 +6,18 @@
   "loss": {
     "csv": [
       [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
         "remittance line structure",
         "flattened",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
         "model->csv"
       ]
     ],
@@ -15,6 +25,11 @@
       [
         "remittance line structure",
         "flattened",
+        "model->mt940"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
         "model->mt940"
       ]
     ]

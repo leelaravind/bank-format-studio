@@ -14,6 +14,7 @@ import lxml.etree as etree
 from bfs_core.camt.validate import validate_bytes
 from bfs_core.camt.versions import V02_BALANCE_CODES, VersionSpec, detect_version
 from bfs_core.errors import (
+    E_CAMT_MISSING_DATE,
     E_CAMT_SCHEMA_INVALID,
     E_XML_DTD_FORBIDDEN,
     E_XML_NOT_WELL_FORMED,
@@ -231,14 +232,22 @@ def _entry_of(ntry: etree._Element, account_currency: str, spec: VersionSpec,
         status = EntryStatus(status_text)
     except ValueError:
         status = EntryStatus.INFO
-        report.warning(W_NON_BOOKED_ENTRY, value=status_text, where=where)
     if status is not EntryStatus.BOOK:
         report.warning(W_NON_BOOKED_ENTRY, value=status_text, where=where)
 
     txdtls_list = ntry.findall("c:NtryDtls/c:TxDtls", ns)
     details: tuple[Transaction, ...] = ()
     base: Transaction | None = None
-    effective_value = value_date or booking_date or date(1970, 1, 1)
+    # B-3: never fabricate a date. ValDt is authoritative; BookgDt is an
+    # explicitly-noted derivation; neither present is a hard, stable error.
+    if value_date is not None:
+        effective_value = value_date
+    elif booking_date is not None:
+        effective_value = booking_date
+        report.loss("value_date", f"camt.053.001.{spec.key}->model", LossKind.DERIVED,
+                    "entry has no ValDt; value date derived from BookgDt", where)
+    else:
+        raise BfsError(E_CAMT_MISSING_DATE, where=where)
     if len(txdtls_list) == 1:
         base = _tx_details(txdtls_list[0], cd, effective_value, booking_date, spec, ns)
     elif len(txdtls_list) > 1:
@@ -247,7 +256,9 @@ def _entry_of(ntry: etree._Element, account_currency: str, spec: VersionSpec,
         )
         detail_sum = sum((t.signed() for t in details), Decimal(0))
         entry_signed = amt[0] * cd.sign
-        if all(t.amount for t in details) and detail_sum != entry_signed:
+        # Cross-check only when the details actually carry amounts (a .02
+        # mixed-direction batch legitimately omits them — see the writer).
+        if any(t.amount != 0 for t in details) and detail_sum != entry_signed:
             report.warning(W_BATCH_SUM_MISMATCH, where=where,
                            detail=f"entry {entry_signed} vs details sum {detail_sum}")
 
@@ -280,7 +291,8 @@ def _entry_of(ntry: etree._Element, account_currency: str, spec: VersionSpec,
         entry.instructed_amount = base.instructed_amount
         entry.instructed_currency = base.instructed_currency
         entry.exchange_rate = base.exchange_rate
-        entry.charges_amount = base.charges_amount or entry.charges_amount
+        entry.charges_amount = (base.charges_amount if base.charges_amount is not None
+                                else entry.charges_amount)
         if base.additional_info:
             entry.additional_info = (
                 f"{entry.additional_info} | {base.additional_info}"
@@ -302,7 +314,9 @@ def _summary_of(stmt: etree._Element, ns: dict[str, str]) -> TransactionsSummary
         return Decimal(t) if t else None
 
     # .02: TtlNetNtryAmt + CdtDbtInd; .08: TtlNetNtry/Amt + TtlNetNtry/CdtDbtInd (GATE-2)
-    net = _dec("c:TtlNtries/c:TtlNetNtryAmt") or _dec("c:TtlNtries/c:TtlNetNtry/c:Amt")
+    net = _dec("c:TtlNtries/c:TtlNetNtryAmt")
+    if net is None:  # explicit None check: a declared net of exactly 0 is a real value
+        net = _dec("c:TtlNtries/c:TtlNetNtry/c:Amt")
     net_cd_text = _text(node, "c:TtlNtries/c:CdtDbtInd", ns) or \
         _text(node, "c:TtlNtries/c:TtlNetNtry/c:CdtDbtInd", ns)
     return TransactionsSummary(

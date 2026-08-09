@@ -1,2 +1,2 @@
-﻿statement_id,account_iban,account_other_id,statement_number,sequence_number,currency,opening_balance_date,opening_balance,closing_balance_date,closing_balance,closing_available_balance,total_credits,total_debits,credit_count,debit_count,transaction_count,source_format,information_loss_flags
-SYNTH-C02,DE75512108001245126199,,1,,EUR,2026-01-02,500.00,2026-01-04,620.00,,220.00,100.00,3,1,4,camt.053.001.02,
+﻿statement_id,statement_occurrence,account_iban,account_other_id,statement_number,sequence_number,currency,opening_balance_date,opening_balance,closing_balance_date,closing_balance,closing_available_balance,total_credits,total_debits,credit_count,debit_count,transaction_count,source_format,information_loss_flags
+SYNTH-C02,1,DE75512108001245126199,,1,,EUR,2026-01-02,500.00,2026-01-04,620.00,,220.00,100.00,3,1,4,camt.053.001.02,dropped

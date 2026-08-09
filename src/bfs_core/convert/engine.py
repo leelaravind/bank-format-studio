@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal
 
 from bfs_core.camt import V02, V08, read_camt053, write_camt053
 from bfs_core.csvio import read_csv, write_csv
@@ -157,11 +158,71 @@ def _write_target(statements: list[Statement], target_format: str,
     raise BfsError(E_UNSUPPORTED_CONVERSION, detail=f"writing {target_format!r}")
 
 
+def _verify_xlsx_conservation(statements: list[Statement], workbook_bytes: bytes,
+                              limits: Limits) -> bool:
+    """INV-7 for the XLSX export (C-6 remediation) — real verification, not an
+    assertion: (a) the strict CSV projection the workbook is built from is
+    reparsed and its conservation keys compared; (b) the produced workbook itself
+    is opened (internal verification only — XLSX import is NOT a product
+    feature) and per-statement row counts and signed amount sums are compared
+    against the reconciliation figures."""
+    import io as _io
+
+    from openpyxl import load_workbook
+
+    # (a) projection reparse
+    tx_csv, st_csv, _ = write_csv(statements)
+    projection, _ = read_csv(tx_csv, st_csv, limits)
+    if len(projection) != len(statements):
+        raise BfsError(E_INTERNAL,
+                       detail=f"xlsx projection statement count {len(statements)} -> {len(projection)}")
+    for original, produced in zip(statements, projection, strict=True):
+        if reconcile_statement(original).conservation_key() != \
+                reconcile_statement(produced).conservation_key():
+            raise BfsError(E_INTERNAL,
+                           detail=f"xlsx projection conservation violated for "
+                                  f"{original.statement_id!r}")
+    # (b) workbook cell cross-check
+    workbook = load_workbook(_io.BytesIO(workbook_bytes), read_only=True, data_only=True)
+    sheet = workbook["transactions"]
+    rows = sheet.iter_rows(values_only=True)
+    header = list(next(rows))
+    id_col = header.index("statement_id")
+    occ_col = header.index("statement_occurrence")
+    amount_col = header.index("amount")
+    sums: dict[tuple, Decimal] = {}
+    counts: dict[tuple, int] = {}
+    for row in rows:
+        key = (str(row[id_col]), int(row[occ_col]))
+        value = row[amount_col]
+        amount = value if isinstance(value, Decimal) else Decimal(str(value))
+        sums[key] = sums.get(key, Decimal(0)) + amount
+        counts[key] = counts.get(key, 0) + 1
+    seen: dict[str, int] = {}
+    for s in statements:
+        seen[s.statement_id] = seen.get(s.statement_id, 0) + 1
+        key = (s.statement_id, seen[s.statement_id])
+        # Direct model ↔ workbook comparison: the exported rows are one per
+        # movement (batch entries explode to their details), signed.
+        expected_rows = sum(len(t.details) or 1 for t in s.transactions)
+        expected_net = sum(
+            (d.signed() for t in s.transactions
+             for d in (t.details if t.details else (t,))),
+            Decimal(0))
+        actual_net = sums.get(key, Decimal(0))
+        if actual_net != expected_net or counts.get(key, 0) != expected_rows:
+            raise BfsError(E_INTERNAL,
+                           detail=f"xlsx workbook figures diverge for {key}: net {actual_net} "
+                                  f"vs {expected_net}, rows {counts.get(key, 0)} vs {expected_rows}")
+    return True
+
+
 def _verify_conservation(statements: list[Statement], output: ConversionOutput,
                          target_format: str, limits: Limits) -> bool:
     """INV-7: reparse the produced output and compare conservation keys."""
     if target_format == FORMAT_XLSX:
-        return True  # export-only; built from the verified CSV projection
+        assert output.data is not None
+        return _verify_xlsx_conservation(statements, output.data, limits)
     payload = ConversionInput(
         data=output.data,
         csv_transactions=output.csv_transactions,

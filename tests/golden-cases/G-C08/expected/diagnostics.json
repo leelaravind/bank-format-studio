@@ -9,12 +9,32 @@
         "batch entry structure",
         "flattened",
         "model->csv"
+      ],
+      [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
+        "model->csv"
       ]
     ],
     "mt940": [
       [
         "batch details",
         "flattened",
+        "model->mt940"
+      ],
+      [
+        "entry_reference",
+        "dropped",
+        "model->mt940"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
         "model->mt940"
       ]
     ]

@@ -19,7 +19,7 @@ import lxml.etree as etree
 
 from bfs_core.camt.validate import validate_bytes
 from bfs_core.camt.versions import VersionSpec
-from bfs_core.errors import E_INTERNAL, BfsError
+from bfs_core.errors import E_INTERNAL, W_REFERENCE_TRUNCATED, BfsError
 from bfs_core.model import (
     Balance,
     CreditDebit,
@@ -40,6 +40,20 @@ def _el(parent: etree._Element, tag: str, text: str | None = None,
     if text is not None:
         node.text = text
     return node
+
+
+def _el_fit(parent: etree._Element, tag: str, value: str, max_len: int,
+            report: DiagnosticReport, where: str, field: str,
+            direction: str) -> etree._Element:
+    """Schema-length-capped element. Truncation is never silent (C-3): the cut
+    is diagnosed and recorded as an information loss."""
+    if len(value) > max_len:
+        report.warning(W_REFERENCE_TRUNCATED, value=value, where=where)
+        report.loss(field, direction, LossKind.TRUNCATED,
+                    f"{value!r} truncated to the schema maximum of {max_len} characters",
+                    where)
+        value = value[:max_len]
+    return _el(parent, tag, value)
 
 
 def _amt_el(parent: etree._Element, tag: str, amount: Decimal, currency: str) -> None:
@@ -104,7 +118,8 @@ def _btc_el(parent: etree._Element, t: Transaction, direction: str,
                     "no bank transaction code available; defaulted to PMNT/MCRD/OTHR", where)
 
 
-def _party_els(txdtls: etree._Element, t: Transaction, spec: VersionSpec) -> None:
+def _party_els(txdtls: etree._Element, t: Transaction, spec: VersionSpec,
+               report: DiagnosticReport, where: str, direction: str) -> None:
     cp = t.counterparty
     if cp is None or cp.is_empty():
         return
@@ -116,7 +131,7 @@ def _party_els(txdtls: etree._Element, t: Transaction, spec: VersionSpec) -> Non
             target = _el(holder, "Pty")
         else:
             target = holder
-        _el(target, "Nm", cp.name[:140])
+        _el_fit(target, "Nm", cp.name, 140, report, where, "counterparty name", direction)
     if cp.account:
         acct = _el(parties, f"{role}Acct")
         acct_id = _el(acct, "Id")
@@ -133,7 +148,8 @@ def _party_els(txdtls: etree._Element, t: Transaction, spec: VersionSpec) -> Non
 
 
 def _txdtls_el(ntry: etree._Element, t: Transaction, spec: VersionSpec,
-               currency: str) -> None:
+               currency: str, report: DiagnosticReport, direction: str,
+               where: str) -> None:
     detail_list = t.details if t.details else (
         (t,) if (t.end_to_end_id or t.mandate_id or t.counterparty
                  or t.remittance_unstructured or t.creditor_reference
@@ -141,25 +157,37 @@ def _txdtls_el(ntry: etree._Element, t: Transaction, spec: VersionSpec,
                  or t.customer_reference) else ())
     if not detail_list:
         return
+    is_batch = len(detail_list) > 1
+    # C-1: camt.02 AmtDtls/TxAmt has no per-detail CdtDbtInd. For MIXED-direction
+    # batches, writing bare amounts would corrupt detail signs on reread — so the
+    # per-detail amounts are omitted entirely and the loss is diagnosed.
+    mixed = is_batch and len({d.credit_debit for d in detail_list}) > 1
+    write_v02_amounts = is_batch and spec.key == "02" and not mixed
+    if is_batch and spec.key == "02" and mixed:
+        report.loss("batch detail amounts/directions", direction, LossKind.DROPPED,
+                    "camt.053.001.02 cannot carry per-detail debit/credit direction; "
+                    "mixed-direction batch detail amounts omitted to prevent sign "
+                    "corruption (references and remittance are preserved)", where)
     ntrydtls = _el(ntry, "NtryDtls")
     for d in detail_list:
         txdtls = _el(ntrydtls, "TxDtls")
         refs = _el(txdtls, "Refs")
         if d.bank_reference and d is not t:
-            _el(refs, "AcctSvcrRef", d.bank_reference[:35])
+            _el_fit(refs, "AcctSvcrRef", d.bank_reference, 35, report, where,
+                    "bank_reference", direction)
         if d.customer_reference and d.customer_reference != d.end_to_end_id:
-            _el(refs, "InstrId", d.customer_reference[:35])
-        _el(refs, "EndToEndId", (d.end_to_end_id or d.customer_reference or "NOTPROVIDED")[:35])
+            _el_fit(refs, "InstrId", d.customer_reference, 35, report, where,
+                    "customer_reference", direction)
+        _el_fit(refs, "EndToEndId", d.end_to_end_id or d.customer_reference or "NOTPROVIDED",
+                35, report, where, "end_to_end_id", direction)
         if d.mandate_id:
-            _el(refs, "MndtId", d.mandate_id[:35])
-        is_batch_detail = len(detail_list) > 1
-        # GATE-2: .08 TxDtls carries Amt/CdtDbtInd directly; .02 has only AmtDtls/TxAmt
-        # (no per-detail direction — a documented loss when directions differ).
-        if is_batch_detail and spec.key != "02":
+            _el_fit(refs, "MndtId", d.mandate_id, 35, report, where, "mandate_id", direction)
+        # GATE-2: .08 TxDtls carries Amt/CdtDbtInd directly.
+        if is_batch and spec.key != "02":
             _amt_el(txdtls, "Amt", d.amount, d.currency or currency)
             _el(txdtls, "CdtDbtInd",
                 "CRDT" if d.credit_debit is CreditDebit.CREDIT else "DBIT")
-        if (is_batch_detail and spec.key == "02") or d.instructed_amount is not None:
+        if write_v02_amounts or d.instructed_amount is not None:
             amtdtls = _el(txdtls, "AmtDtls")
             if d.instructed_amount is not None:
                 instd = _el(amtdtls, "InstdAmt")
@@ -168,13 +196,13 @@ def _txdtls_el(ntry: etree._Element, t: Transaction, spec: VersionSpec,
                     xchg = _el(instd, "CcyXchg")
                     _el(xchg, "SrcCcy", d.instructed_currency or currency)
                     _el(xchg, "XchgRate", _fmt(d.exchange_rate))
-            if is_batch_detail and spec.key == "02":
+            if write_v02_amounts:
                 txamt = _el(amtdtls, "TxAmt")
                 _amt_el(txamt, "Amt", d.amount, d.currency or currency)
-        _party_els(txdtls, d, spec)
+        _party_els(txdtls, d, spec, report, where, direction)
         if d.purpose_code:
             purp = _el(txdtls, "Purp")
-            _el(purp, "Cd", d.purpose_code[:4])
+            _el_fit(purp, "Cd", d.purpose_code, 4, report, where, "purpose_code", direction)
         if d.remittance_unstructured or d.creditor_reference:
             rmt = _el(txdtls, "RmtInf")
             for line in d.remittance_unstructured:
@@ -183,18 +211,20 @@ def _txdtls_el(ntry: etree._Element, t: Transaction, spec: VersionSpec,
             if d.creditor_reference:
                 strd = _el(rmt, "Strd")
                 cref = _el(strd, "CdtrRefInf")
-                _el(cref, "Ref", d.creditor_reference[:35])
+                _el_fit(cref, "Ref", d.creditor_reference, 35, report, where,
+                        "creditor_reference", direction)
         if d.return_reason:
             rtr = _el(txdtls, "RtrInf")
             rsn = _el(rtr, "Rsn")
-            _el(rsn, "Cd", d.return_reason[:4])
+            _el_fit(rsn, "Cd", d.return_reason, 4, report, where, "return_reason", direction)
 
 
 def _ntry_el(stmt_el: etree._Element, t: Transaction, spec: VersionSpec, currency: str,
              report: DiagnosticReport, direction: str, where: str) -> None:
     ntry = _el(stmt_el, "Ntry")
     if t.entry_reference:
-        _el(ntry, "NtryRef", t.entry_reference[:35])
+        _el_fit(ntry, "NtryRef", t.entry_reference, 35, report, where,
+                "entry_reference", direction)
     _amt_el(ntry, "Amt", t.amount, t.currency or currency)
     _el(ntry, "CdtDbtInd", "CRDT" if t.credit_debit is CreditDebit.CREDIT else "DBIT")
     if t.is_reversal:
@@ -210,7 +240,8 @@ def _ntry_el(stmt_el: etree._Element, t: Transaction, spec: VersionSpec, currenc
     val = _el(ntry, "ValDt")
     _el(val, "Dt", t.value_date.isoformat())
     if t.bank_reference:
-        _el(ntry, "AcctSvcrRef", t.bank_reference[:35])
+        _el_fit(ntry, "AcctSvcrRef", t.bank_reference, 35, report, where,
+                "bank_reference", direction)
     _btc_el(ntry, t, direction, report, where)
     if t.charges_amount is not None:
         # GATE-2 structural difference: .02 ChargesInformation6 mandates Amt;
@@ -221,7 +252,7 @@ def _ntry_el(stmt_el: etree._Element, t: Transaction, spec: VersionSpec, currenc
         else:
             _amt_el(chrgs, "TtlChrgsAndTaxAmt", t.charges_amount, t.currency or currency)
 
-    _txdtls_el(ntry, t, spec, currency)
+    _txdtls_el(ntry, t, spec, currency, report, direction, where)
 
     additional_bits: list[str] = []
     if t.additional_info:
@@ -235,7 +266,8 @@ def _ntry_el(stmt_el: etree._Element, t: Transaction, spec: VersionSpec, currenc
         report.loss("supplementary_details", direction, LossKind.FLATTENED,
                     "no camt slot; preserved in AddtlNtryInf", where)
     if additional_bits:
-        _el(ntry, "AddtlNtryInf", " | ".join(additional_bits)[:500])
+        _el_fit(ntry, "AddtlNtryInf", " | ".join(additional_bits), 500,
+                report, where, "additional entry info", direction)
 
 
 def write_camt053(statements: list[Statement], spec: VersionSpec,
@@ -255,10 +287,11 @@ def write_camt053(statements: list[Statement], spec: VersionSpec,
     for s in statements:
         where = f"statement {s.statement_id!r}"
         stmt_el = _el(doc, "Stmt")
-        _el(stmt_el, "Id", s.statement_id[:35])
+        _el_fit(stmt_el, "Id", s.statement_id, 35, report, where, "statement_id", direction)
         if spec.has_pagination:
+            # GATE-3: .08 pagination carries the MT940 :28C: page number.
             pgntn = _el(stmt_el, "StmtPgntn")
-            _el(pgntn, "PgNb", "1")
+            _el(pgntn, "PgNb", str(s.sequence_number if s.sequence_number is not None else 1))
             _el(pgntn, "LastPgInd", "true")
         eseq = s.electronic_seq_number or s.statement_number
         if eseq is not None:
@@ -277,7 +310,8 @@ def write_camt053(statements: list[Statement], spec: VersionSpec,
             _el(acct_id, "IBAN", s.account_iban)
         else:
             othr = _el(acct_id, "Othr")
-            _el(othr, "Id", (s.account_other_id or s.account_raw or "UNKNOWN")[:34])
+            _el_fit(othr, "Id", s.account_other_id or s.account_raw or "UNKNOWN",
+                    34, report, where, "account id", direction)
         _el(acct, "Ccy", s.account_currency)
 
         _bal_el(stmt_el, "OPBD", s.opening_balance)
@@ -339,7 +373,8 @@ def write_camt053(statements: list[Statement], spec: VersionSpec,
             report.loss("sequence_number", direction, LossKind.DROPPED,
                         "camt.053.001.02 has no pagination element (GATE-3)", where)
         if additional_bits:
-            _el(stmt_el, "AddtlStmtInf", " | ".join(additional_bits)[:500])
+            _el_fit(stmt_el, "AddtlStmtInf", " | ".join(additional_bits), 500,
+                    report, where, "additional statement info", direction)
 
     payload = etree.tostring(root, xml_declaration=True, encoding="UTF-8",
                              pretty_print=True)

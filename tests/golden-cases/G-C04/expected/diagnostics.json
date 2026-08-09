@@ -16,7 +16,17 @@
         "model->csv"
       ],
       [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
         "forward available balance",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
         "dropped",
         "model->csv"
       ]
@@ -29,6 +39,11 @@
       ],
       [
         "balance PRCD",
+        "dropped",
+        "model->mt940"
+      ],
+      [
+        "statement timestamps",
         "dropped",
         "model->mt940"
       ]

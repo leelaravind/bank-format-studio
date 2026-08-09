@@ -4,7 +4,24 @@
     "mt940": []
   },
   "loss": {
-    "csv": [],
-    "mt940": []
+    "csv": [
+      [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
+        "model->csv"
+      ]
+    ],
+    "mt940": [
+      [
+        "statement timestamps",
+        "dropped",
+        "model->mt940"
+      ]
+    ]
   }
 }

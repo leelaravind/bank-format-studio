@@ -11,6 +11,12 @@
         "model->camt.053.001.02"
       ]
     ],
-    "csv": []
+    "csv": [
+      [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ]
+    ]
   }
 }

@@ -71,14 +71,19 @@ def _balance_line(tag: str, balance) -> str:
 
 
 def _ref16(value: str | None, default: str, report: DiagnosticReport, where: str,
-           spill: list[str], label: str) -> str:
+           spill: dict[str, str], spill_word: str, label: str) -> str:
+    """Fit a reference into a 16x :61: subfield. Overflowing values are truncated
+    in :61: AND queued under a dedicated :86: code word (/CREF/ customer,
+    /ASREF/ bank) so the full value is genuinely preserved; the loss note states
+    exactly that. B-1 remediation: every spilled value is written, none implied."""
     if not value:
         return default
     if len(value) > 16:
         report.warning(W_REFERENCE_TRUNCATED, value=value, where=where)
         report.loss(label, _DIRECTION, LossKind.TRUNCATED,
-                    f"{value!r} truncated to 16 chars in :61:; full value kept in :86:", where)
-        spill.append(value)
+                    f"{value!r} truncated to 16 chars in :61:; full value written to "
+                    f":86: as /{spill_word}/", where)
+        spill[spill_word] = value
         return value[:16]
     return value
 
@@ -100,12 +105,15 @@ def _tx_type(t: Transaction, report: DiagnosticReport, where: str) -> str:
 
 
 def _build_86(t: Transaction, report: DiagnosticReport, where: str,
-              extra_refs: list[str]) -> str | None:
+              spill: dict[str, str]) -> str | None:
     parts: list[str] = []
     if t.end_to_end_id:
         parts.append(f"/EREF/{t.end_to_end_id}")
-    elif extra_refs:
-        parts.append(f"/EREF/{extra_refs[0]}")
+    # B-1: EVERY overflowing :61: reference is written in full, under its own
+    # code word, regardless of whether an EndToEndId is present.
+    for word in ("CREF", "ASREF"):
+        if word in spill:
+            parts.append(f"/{word}/{spill[word]}")
     if t.creditor_reference:
         parts.append(f"/PREF/{t.creditor_reference}")
     if t.mandate_id:
@@ -140,6 +148,8 @@ def _build_86(t: Transaction, report: DiagnosticReport, where: str,
     if t.instructed_amount is not None:
         ccy = t.instructed_currency or ""
         parts.append(f"/OCMT/{ccy}{format_swift_amount(t.instructed_amount)}")
+    if t.exchange_rate is not None:
+        parts.append(f"/EXCH/{format_swift_amount(t.exchange_rate)}")
     if t.additional_info:
         parts.append(t.additional_info if parts else t.additional_info)
     if t.details:
@@ -168,19 +178,38 @@ def write_mt940(statements: list[Statement]) -> tuple[bytes, DiagnosticReport]:
             sid = sid[:16]
         out.append(f":20:{_translit(sid, report, where + ' :20:', seen_translit)}")
         if s.related_reference:
-            out.append(f":21:{s.related_reference[:16]}")
+            if len(s.related_reference) > 16:
+                report.warning(W_REFERENCE_TRUNCATED, value=s.related_reference, where=where)
+                report.loss("related_reference", _DIRECTION, LossKind.TRUNCATED,
+                            f"{s.related_reference!r} truncated to 16 chars for :21:", where)
+            out.append(f":21:{_translit(s.related_reference[:16], report, where + ' :21:', seen_translit)}")
         account = s.account_iban or s.account_other_id or s.account_raw or "UNKNOWN"
+        if len(account) > 35:
+            report.loss("account identification", _DIRECTION, LossKind.TRUNCATED,
+                        f"{account!r} truncated to 35 chars for :25:", where)
         out.append(f":25:{_translit(account[:35], report, where + ' :25:', seen_translit)}")
         number = s.statement_number if s.statement_number is not None else 1
         seq = s.sequence_number
         out.append(f":28C:{number}" + (f"/{seq}" if seq is not None else ""))
-        out.append(_balance_line("60F", s.opening_balance))
+        # C-2: fields with no MT940 slot must not vanish silently.
+        if s.additional_info:
+            report.loss("statement additional info", _DIRECTION, LossKind.DROPPED,
+                        "MT940 has no statement-level information slot in this writer's "
+                        "output convention", where)
+        if s.electronic_seq_number is not None and s.electronic_seq_number != s.statement_number:
+            report.loss("electronic_seq_number", _DIRECTION, LossKind.DROPPED,
+                        "MT940 :28C: carries only the statement/page numbers", where)
+        if s.creation_datetime or s.from_datetime or s.to_datetime:
+            report.loss("statement timestamps", _DIRECTION, LossKind.DROPPED,
+                        "creation/period timestamps have no MT940 representation", where)
+        opening_tag = "60M" if s.opening_is_intermediate else "60F"
+        out.append(_balance_line(opening_tag, s.opening_balance))
         for i, t in enumerate(s.transactions, 1):
             loc = f"{where}, entry {i}"
-            spill: list[str] = []
+            spill: dict[str, str] = {}
             cust = _ref16(t.customer_reference or t.end_to_end_id, "NONREF",
-                          report, loc, spill, "customer_reference")
-            bank = _ref16(t.bank_reference, "", report, loc, spill, "bank_reference")
+                          report, loc, spill, "CREF", "customer_reference")
+            bank = _ref16(t.bank_reference, "", report, loc, spill, "ASREF", "bank_reference")
             line = (f":61:{_yymmdd(t.value_date)}"
                     + (t.booking_date.strftime("%m%d") if t.booking_date else "")
                     + _dc_mark(t)
@@ -191,7 +220,18 @@ def write_mt940(statements: list[Statement]) -> tuple[bytes, DiagnosticReport]:
                     + (f"//{bank}" if bank else ""))
             out.append(line)
             if t.supplementary_details:
+                if len(t.supplementary_details) > 34:
+                    report.loss("supplementary_details", _DIRECTION, LossKind.TRUNCATED,
+                                f"{t.supplementary_details!r} truncated to the 34x "
+                                ":61: supplementary subfield", loc)
                 out.append(t.supplementary_details[:34])
+            if t.entry_reference:
+                report.loss("entry_reference", _DIRECTION, LossKind.DROPPED,
+                            "camt NtryRef has no MT940 slot", loc)
+            if t.btc is not None and (t.btc.domain or t.btc.proprietary) and t.swift_tx_type:
+                report.loss("bank transaction code", _DIRECTION, LossKind.FLATTENED,
+                            "structured/proprietary BTC reduced to the 4-char SWIFT "
+                            "type code in :61:", loc)
             if t.currency is not None and t.currency != s.account_currency:
                 report.loss("entry currency", _DIRECTION, LossKind.DROPPED,
                             f"per-entry currency {t.currency} not representable in MT940; "

@@ -142,12 +142,16 @@ class TestMt940Writer:
         assert b"RC50,00" in payload  # DEBIT reversal → RC (GATE-1 inverse)
 
     def test_long_reference_truncated_with_loss_note(self):
+        # B-1 remediation: :61: still truncates to 16x, but the FULL value is
+        # spilled to :86:/CREF/ and restored on reparse (previously it was lost
+        # and the loss note falsely claimed preservation).
         s = rich_statement()
         s.transactions[0].customer_reference = "X" * 20
         payload, report = write_mt940([s])
         assert any(n.kind is LossKind.TRUNCATED for n in report.loss_notes)
+        assert b"/CREF/" + b"X" * 20 in payload.replace(b"\r\n", b"")
         statements, _ = read_mt940(payload)
-        assert statements[0].transactions[0].customer_reference == "X" * 16
+        assert statements[0].transactions[0].customer_reference == "X" * 20
 
     def test_transliteration_recorded(self):
         s = rich_statement()

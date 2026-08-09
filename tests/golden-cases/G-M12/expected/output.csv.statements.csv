@@ -1,2 +1,2 @@
-﻿statement_id,account_iban,account_other_id,statement_number,sequence_number,currency,opening_balance_date,opening_balance,closing_balance_date,closing_balance,closing_available_balance,total_credits,total_debits,credit_count,debit_count,transaction_count,source_format,information_loss_flags
-SYNTH-M12,DE75512108001245126199,,7,2,EUR,2026-01-01,500.00,2026-01-03,450.00,,50.00,100.00,1,1,2,mt940,
+﻿statement_id,statement_occurrence,account_iban,account_other_id,statement_number,sequence_number,currency,opening_balance_date,opening_balance,closing_balance_date,closing_balance,closing_available_balance,total_credits,total_debits,credit_count,debit_count,transaction_count,source_format,information_loss_flags
+SYNTH-M12,1,DE75512108001245126199,,7,2,EUR,2026-01-01,500.00,2026-01-03,450.00,,50.00,100.00,1,1,2,mt940,

@@ -61,8 +61,15 @@ def format_swift_amount(amount: Decimal) -> str:
     text = format(amount, "f")
     if "." in text:
         int_part, frac = text.split(".")
-        return f"{int_part},{frac}"
-    return f"{text},"
+        text = f"{int_part},{frac}"
+    else:
+        text = f"{text},"
+    # C-4: SWIFT 15d — never emit a syntactically invalid MT940 amount.
+    if len(text) > 15:
+        raise BfsError(E_MT940_BAD_AMOUNT, value=str(amount), where="serializer",
+                       detail="exceeds the SWIFT 15d amount field (15 characters "
+                              "including the comma); this value cannot be represented in MT940")
+    return text
 
 
 def validate_currency(code: str, where: str = "") -> str:

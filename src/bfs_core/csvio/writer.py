@@ -92,25 +92,48 @@ def _tx_row(s: Statement, t: Transaction) -> dict[str, str]:
     }
 
 
+def _occurrences(statements: list[Statement]) -> list[int]:
+    """1-based per-statement_id ordinal (B-2): banks reuse :20: references, so
+    (statement_id, statement_occurrence) is the file-local statement key."""
+    counts: dict[str, int] = {}
+    out = []
+    for s in statements:
+        counts[s.statement_id] = counts.get(s.statement_id, 0) + 1
+        out.append(counts[s.statement_id])
+    return out
+
+
 def write_csv(statements: list[Statement],
               excel_safe: bool = True) -> tuple[bytes, bytes, DiagnosticReport]:
     """Returns (transactions_csv, statements_csv, report). statements.csv is
     mandatory on every export (locked decision)."""
     report = DiagnosticReport()
+    occurrences = _occurrences(statements)
     tx_buf = io.StringIO()
     tw = _writer(tx_buf)
     tw.writerow(TRANSACTIONS_COLUMNS)
     row_number = 0
-    for s in statements:
+    for s, occurrence in zip(statements, occurrences, strict=True):
         where = f"statement {s.statement_id!r}"
         for i, t in enumerate(s.transactions, 1):
+            loc = f"{where}, entry {i}"
             if len(t.remittance_unstructured) > 1:
                 report.loss("remittance line structure", _DIRECTION, LossKind.FLATTENED,
-                            "multiple remittance lines joined with spaces",
-                            f"{where}, entry {i}")
+                            "multiple remittance lines joined with spaces", loc)
+            # C-2: fields with no CSV column must not vanish silently.
+            if t.return_reason:
+                report.loss("return_reason", _DIRECTION, LossKind.DROPPED,
+                            "no CSV column for return reason codes", loc)
+            if t.counterparty is not None and t.counterparty.is_agent:
+                report.loss("counterparty agent flag", _DIRECTION, LossKind.DROPPED,
+                            "no CSV column for the agent-vs-party distinction", loc)
+            if t.btc is not None and t.btc.proprietary_issuer:
+                report.loss("btc issuer", _DIRECTION, LossKind.DROPPED,
+                            "no CSV column for the proprietary code issuer", loc)
             for row in _tx_rows(s, t, report, f"{where}, entry {i}"):
                 row_number += 1
                 row["row_number"] = str(row_number)
+                row["statement_occurrence"] = str(occurrence)
                 row["statement_opening_balance"] = str(s.opening_balance.signed())
                 row["statement_closing_balance"] = str(s.closing_balance.signed())
                 tw.writerow([neutralize(row.get(c, ""), c, excel_safe)
@@ -119,11 +142,36 @@ def write_csv(statements: list[Statement],
     st_buf = io.StringIO()
     sw = _writer(st_buf)
     sw.writerow(STATEMENTS_COLUMNS)
-    for s in statements:
+    for s, occurrence in zip(statements, occurrences, strict=True):
         recon = reconcile_statement(s)
-        loss_flags = sorted({n.kind.value for n in report.loss_notes}) if report.loss_notes else []
+        prefix = f"statement {s.statement_id!r}"
+        for code, _b in s.other_balances:
+            report.loss(f"balance {code}", _DIRECTION, LossKind.DROPPED,
+                        f"balance type {code} has no CSV column", prefix)
+        for _f in s.forward_available:
+            report.loss("forward available balance", _DIRECTION, LossKind.DROPPED,
+                        "FWAV balances have no CSV column", prefix)
+        if s.summary is not None:
+            report.loss("transactions summary", _DIRECTION, LossKind.DROPPED,
+                        "declared TxsSummry figures are not exported (computed totals "
+                        "are in statements.csv instead)", prefix)
+        if s.related_reference:
+            report.loss("related_reference", _DIRECTION, LossKind.DROPPED,
+                        "no CSV column for the related reference (:21:)", prefix)
+        if s.additional_info:
+            report.loss("statement additional info", _DIRECTION, LossKind.DROPPED,
+                        "no CSV column for statement-level additional information", prefix)
+        if s.electronic_seq_number is not None and s.electronic_seq_number != s.statement_number:
+            report.loss("electronic_seq_number", _DIRECTION, LossKind.DROPPED,
+                        "no CSV column for the electronic sequence number", prefix)
+        if s.creation_datetime or s.from_datetime or s.to_datetime:
+            report.loss("statement timestamps", _DIRECTION, LossKind.DROPPED,
+                        "creation/period timestamps have no CSV columns", prefix)
+        loss_flags = sorted({n.kind.value for n in report.loss_notes
+                             if n.location.startswith(prefix)})
         row = {
             "statement_id": s.statement_id,
+            "statement_occurrence": str(occurrence),
             "account_iban": s.account_iban or "",
             "account_other_id": s.account_other_id or "",
             "statement_number": "" if s.statement_number is None else str(s.statement_number),
@@ -143,15 +191,5 @@ def write_csv(statements: list[Statement],
             "information_loss_flags": ";".join(loss_flags),
         }
         sw.writerow([neutralize(row.get(c, ""), c, excel_safe) for c in STATEMENTS_COLUMNS])
-        for code, _b in s.other_balances:
-            report.loss(f"balance {code}", _DIRECTION, LossKind.DROPPED,
-                        f"balance type {code} has no CSV column", f"statement {s.statement_id!r}")
-        for _f in s.forward_available:
-            report.loss("forward available balance", _DIRECTION, LossKind.DROPPED,
-                        "FWAV balances have no CSV column", f"statement {s.statement_id!r}")
-        if s.summary is not None:
-            report.loss("transactions summary", _DIRECTION, LossKind.DROPPED,
-                        "declared TxsSummry figures are not exported (computed totals "
-                        "are in statements.csv instead)", f"statement {s.statement_id!r}")
 
     return _encode(tx_buf), _encode(st_buf), report

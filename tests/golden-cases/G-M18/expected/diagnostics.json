@@ -15,6 +15,12 @@
         "model->camt.053.001.02"
       ]
     ],
-    "csv": []
+    "csv": [
+      [
+        "statement additional info",
+        "dropped",
+        "model->csv"
+      ]
+    ]
   }
 }

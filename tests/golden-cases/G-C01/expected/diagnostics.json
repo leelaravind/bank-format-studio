@@ -6,7 +6,24 @@
   },
   "loss": {
     "camt.053.001.08": [],
-    "csv": [],
-    "mt940": []
+    "csv": [
+      [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
+        "model->csv"
+      ]
+    ],
+    "mt940": [
+      [
+        "statement timestamps",
+        "dropped",
+        "model->mt940"
+      ]
+    ]
   }
 }

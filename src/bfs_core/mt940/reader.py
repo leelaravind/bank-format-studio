@@ -242,8 +242,12 @@ def _map_transaction(lib_tx: object, statement_currency: str,
         funds_code=d.get("funds_code") or None,
         swift_tx_type=(d.get("id") or "").strip() or None,
         btc=parsed.btc if parsed else None,
-        customer_reference=(d.get("customer_reference") or "").strip() or None,
-        bank_reference=(d.get("bank_reference") or "").strip() or None,
+        # B-1: /CREF//ASREF/ spill words carry the FULL reference when the :61:
+        # subfield was truncated at write time — prefer them on read.
+        customer_reference=(parsed.customer_reference_full if parsed and parsed.customer_reference_full
+                            else (d.get("customer_reference") or "").strip() or None),
+        bank_reference=(parsed.bank_reference_full if parsed and parsed.bank_reference_full
+                        else (d.get("bank_reference") or "").strip() or None),
         end_to_end_id=parsed.end_to_end_id if parsed else None,
         mandate_id=parsed.mandate_id if parsed else None,
         supplementary_details=(d.get("extra_details") or "").strip() or None,
@@ -252,6 +256,9 @@ def _map_transaction(lib_tx: object, statement_currency: str,
         creditor_reference=parsed.creditor_reference if parsed else None,
         purpose_code=parsed.purpose_code if parsed else None,
         return_reason=parsed.return_reason if parsed else None,
+        instructed_amount=parsed.instructed_amount if parsed else None,
+        instructed_currency=parsed.instructed_currency if parsed else None,
+        exchange_rate=parsed.exchange_rate if parsed else None,
         additional_info=additional,
         raw_86=raw_86,
     )

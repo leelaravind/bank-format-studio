@@ -14,8 +14,11 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 
 from bfs_core.model import BankTransactionCode, Counterparty
+
+_OCMT_RE = re.compile(r"^([A-Z]{3})?\s*([\d.,]+)$")
 
 _IBAN_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$")
 _BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
@@ -25,6 +28,10 @@ _NL_CODES = (
     "EREF", "PREF", "MARF", "CSID", "RTRN", "ACCW", "BENM", "ORDP", "CNTP",
     "NAME", "ID", "ADDR", "REMI", "ISDT", "PURP", "CD", "ULTB", "ULTD",
     "IBAN", "BIC", "TRTP", "OCMT", "EXCH", "CHGS", "SWOC",
+    # Own-convention spill words (B-1): full values of :61: references that
+    # exceeded the 16-char subfields. Documented in the product's :86: output
+    # convention; parsed back so round trips restore the complete references.
+    "CREF", "ASREF",
 )
 _NL_SPLIT_RE = re.compile(r"/(" + "|".join(_NL_CODES) + r")/")
 _GVC_RE = re.compile(r"^(\d{3})(\?.*)?$", re.DOTALL)
@@ -35,6 +42,11 @@ _SEPA_WORD_RE = re.compile(r"(EREF|KREF|MREF|CRED|DEBT|SVWZ|ABWA|ABWE|BIC|IBAN)\
 @dataclass
 class Parsed86:
     end_to_end_id: str | None = None
+    customer_reference_full: str | None = None   # /CREF/ spill (B-1)
+    bank_reference_full: str | None = None       # /ASREF/ spill (B-1)
+    instructed_amount: "Decimal | None" = None   # /OCMT/
+    instructed_currency: str | None = None
+    exchange_rate: "Decimal | None" = None       # /EXCH/
     mandate_id: str | None = None
     purpose_code: str | None = None
     return_reason: str | None = None
@@ -89,6 +101,10 @@ def _parse_nl(text: str) -> Parsed86:
             continue
         if code == "EREF":
             result.end_to_end_id = value
+        elif code == "CREF":
+            result.customer_reference_full = value
+        elif code == "ASREF":
+            result.bank_reference_full = value
         elif code == "MARF":
             result.mandate_id = value
         elif code == "PREF":
@@ -136,7 +152,24 @@ def _parse_nl(text: str) -> Parsed86:
                 result.additional.append(f"code: {value}")
         elif code == "ISDT":
             result.additional.append(f"settlement date: {value}")
-        elif code in ("TRTP", "OCMT", "EXCH", "CHGS", "SWOC"):
+        elif code == "OCMT":
+            m = _OCMT_RE.match(value.replace(" ", ""))
+            parsed_ok = False
+            if m:
+                try:
+                    result.instructed_amount = Decimal(m.group(2).replace(",", "."))
+                    result.instructed_currency = m.group(1)
+                    parsed_ok = True
+                except InvalidOperation:
+                    parsed_ok = False
+            if not parsed_ok:
+                result.additional.append(f"ocmt: {value}")
+        elif code == "EXCH":
+            try:
+                result.exchange_rate = Decimal(value.replace(",", "."))
+            except InvalidOperation:
+                result.additional.append(f"exch: {value}")
+        elif code in ("TRTP", "CHGS", "SWOC"):
             result.additional.append(f"{code.lower()}: {value}")
     if cp_name or cp_account or cp_bic:
         result.counterparty = Counterparty(name=cp_name, account=cp_account, bic=cp_bic)

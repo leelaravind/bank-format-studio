@@ -22,12 +22,25 @@ TRANSACTIONS_OPTIONAL = [
     "additional_info",
 ]
 TRANSACTIONS_DERIVED = [
-    "row_number", "statement_opening_balance", "statement_closing_balance",
+    "row_number", "statement_occurrence", "statement_opening_balance",
+    "statement_closing_balance",
 ]
+# Required statement columns (unchanged since dialect v1.0 — statement_occurrence
+# is optional for backward compatibility, but REQUIRED when statement_ids repeat).
+STATEMENTS_REQUIRED = [
+    "statement_id", "account_iban", "account_other_id", "statement_number",
+    "sequence_number", "currency", "opening_balance_date", "opening_balance",
+    "closing_balance_date", "closing_balance",
+]
+# Dialect v1.1 (B-2): `statement_occurrence` is a DERIVED 1-based ordinal that
+# distinguishes multiple statements sharing one statement_id (banks reuse :20:
+# references). It is a file-local disambiguator, NOT bank data: rows with the
+# same (statement_id, statement_occurrence) belong to one statement occurrence.
+# Files without the column remain readable when statement_ids are unique.
 TRANSACTIONS_COLUMNS = TRANSACTIONS_REQUIRED + TRANSACTIONS_OPTIONAL + TRANSACTIONS_DERIVED
 
 STATEMENTS_COLUMNS = [
-    "statement_id", "account_iban", "account_other_id", "statement_number",
+    "statement_id", "statement_occurrence", "account_iban", "account_other_id", "statement_number",
     "sequence_number", "currency", "opening_balance_date", "opening_balance",
     "closing_balance_date", "closing_balance", "closing_available_balance",
     "total_credits", "total_debits", "credit_count", "debit_count",

@@ -6,12 +6,27 @@
   "loss": {
     "csv": [
       [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
+        "model->csv"
+      ],
+      [
         "transactions summary",
         "dropped",
         "model->csv"
       ]
     ],
     "mt940": [
+      [
+        "statement timestamps",
+        "dropped",
+        "model->mt940"
+      ],
       [
         "transactions summary",
         "dropped",

@@ -19,6 +19,7 @@ E_BAD_CURRENCY = "E_BAD_CURRENCY"
 E_BALANCE_CURRENCY_MISMATCH = "E_BALANCE_CURRENCY_MISMATCH"
 E_PAGE_CHAIN_BROKEN = "E_PAGE_CHAIN_BROKEN"
 E_CAMT_SCHEMA_INVALID = "E_CAMT_SCHEMA_INVALID"
+E_CAMT_MISSING_DATE = "E_CAMT_MISSING_DATE"
 E_CAMT_UNSUPPORTED_VERSION = "E_CAMT_UNSUPPORTED_VERSION"
 E_CAMT_NOT_CAMT053 = "E_CAMT_NOT_CAMT053"
 E_XML_NOT_WELL_FORMED = "E_XML_NOT_WELL_FORMED"
@@ -30,7 +31,6 @@ E_CSV_BAD_VALUE = "E_CSV_BAD_VALUE"
 E_CSV_INCONSISTENT = "E_CSV_INCONSISTENT"
 E_RECON_MISMATCH = "E_RECON_MISMATCH"
 E_UNSUPPORTED_CONVERSION = "E_UNSUPPORTED_CONVERSION"
-E_ENCODING_UNDECODABLE = "E_ENCODING_UNDECODABLE"
 E_INTERNAL = "E_INTERNAL"
 
 # --- Warnings (W_*) ---------------------------------------------------------
@@ -65,6 +65,7 @@ _CATALOG: dict[str, str] = {
     E_BALANCE_CURRENCY_MISMATCH: "Balance currencies disagree within one statement: {detail} ({where}).",
     E_PAGE_CHAIN_BROKEN: "Statement pages do not chain: closing balance of page {page} ({detail}) does not match the next page's opening balance.",
     E_CAMT_SCHEMA_INVALID: "The file does not conform to the {version} schema: {detail} (at {where}).",
+    E_CAMT_MISSING_DATE: "Entry has neither a value date (ValDt) nor a booking date (BookgDt) — a transaction date cannot be invented ({where}).",
     E_CAMT_UNSUPPORTED_VERSION: "camt.053 version {value!r} is not supported. Supported versions: camt.053.001.02, camt.053.001.08.",
     E_CAMT_NOT_CAMT053: "The XML file is not a camt.053 bank statement (root namespace: {value!r}).",
     E_XML_NOT_WELL_FORMED: "The XML file is not well-formed: {detail}",
@@ -76,7 +77,6 @@ _CATALOG: dict[str, str] = {
     E_CSV_INCONSISTENT: "CSV data is internally inconsistent: {detail} ({where}).",
     E_RECON_MISMATCH: "Balances do not reconcile: {detail}",
     E_UNSUPPORTED_CONVERSION: "Conversion {detail} is not supported.",
-    E_ENCODING_UNDECODABLE: "The file's text encoding could not be determined ({detail}).",
     E_INTERNAL: "Internal error ({detail}). This is a product defect — please report it.",
     W_DUPLICATE_ENTRY: "Possible duplicate transaction: {detail} ({where}).",
     W_CURRENCY_DECIMALS: "Amount {value} has more decimal places than {detail} allows for this currency ({where}).",

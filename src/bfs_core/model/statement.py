@@ -114,7 +114,7 @@ class TransactionsSummary:
     credit_sum: Decimal | None = None
     debit_count: int | None = None
     debit_sum: Decimal | None = None
-    net_amount: Decimal | None = None          # signed
+    net_amount: Decimal | None = None          # unsigned magnitude; direction below
     net_credit_debit: CreditDebit | None = None
 
 

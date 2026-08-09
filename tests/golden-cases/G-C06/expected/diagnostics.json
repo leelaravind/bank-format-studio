@@ -5,6 +5,17 @@
     ]
   },
   "loss": {
-    "csv": []
+    "csv": [
+      [
+        "btc issuer",
+        "dropped",
+        "model->csv"
+      ],
+      [
+        "statement timestamps",
+        "dropped",
+        "model->csv"
+      ]
+    ]
   }
 }
