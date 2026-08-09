@@ -5,7 +5,9 @@ Covers INV-7 (conservation asserted inside the engine on every conversion) and
 INV-8 (round-trip conservation via the CSV/MT940/camt golden chains).
 """
 
+import io
 import json
+import zipfile
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -22,6 +24,26 @@ GOLDEN = ROOT / "tests" / "golden-cases"
 CLOCK = datetime(2026, 1, 15, 10, 30)
 
 CASES = sorted(p.name for p in GOLDEN.iterdir() if (p / "case.json").exists())
+
+
+def _outputs_equal(name: str, produced: bytes, expected: bytes) -> bool:
+    """Byte-exact for every format; xlsx falls back to member-wise equality.
+
+    The xlsx container's deflate streams differ between zlib builds (CPython
+    3.14 ships zlib-ng; 3.12/3.13 classic zlib), so the frozen container bytes
+    are only reproducible on the build that froze them. Member names, order and
+    uncompressed member bytes must still match exactly — content determinism is
+    fully asserted; only the compression encoding may vary.
+    """
+    if produced == expected:
+        return True
+    if not name.endswith(".xlsx"):
+        return False
+    za = zipfile.ZipFile(io.BytesIO(produced))
+    zb = zipfile.ZipFile(io.BytesIO(expected))
+    return za.namelist() == zb.namelist() and all(
+        za.read(n) == zb.read(n) for n in za.namelist()
+    )
 
 
 def _payload(manifest: dict) -> ConversionInput:
@@ -95,7 +117,8 @@ def test_golden_case(case_id):
             produced[conversion["expected_output"][0]] = result.output.primary()
         for name in conversion["expected_output"]:
             expected_bytes = (case_dir / "expected" / name).read_bytes()
-            assert produced[name] == expected_bytes, f"{case_id}:{name} differs from frozen output"
+            assert _outputs_equal(name, produced[name], expected_bytes), \
+                f"{case_id}:{name} differs from frozen output"
         assert sorted({d.code for d in result.report.diagnostics}) == diagnostics["codes"][target]
         got_loss = sorted([n.field_name, n.kind.value, n.direction]
                           for n in {(x.field_name, x.kind, x.direction): x
