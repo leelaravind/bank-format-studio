@@ -12,6 +12,9 @@ the owner holds; engineering must never fake them.
 - [ ] Generated MT940 reparses + INV-7 conservation (enforced in-engine on every conversion)
 - [ ] Deterministic outputs (golden byte-comparisons)
 - [ ] THIRD-PARTY-NOTICES.txt regenerated and shipped
+- [ ] EULA integrated: `docs/EULA.md` and `packaging/EULA.txt` in sync, installer
+      `LicenseFile` requires acceptance, EULA shipped in the install dir
+      (verified by `tests/unit/test_release_packaging.py`)
 - [ ] LGPL-3.0 + GPL-3.0 texts shipped in `licenses/` (build fails without them)
 - [ ] PyInstaller `--onedir` build; Qt DLLs present as replaceable files (checked by build script)
 - [ ] No UPX (locked decision)
@@ -30,10 +33,15 @@ the owner holds; engineering must never fake them.
 
 ## OWNER actions
 
+- [ ] Fill the EULA release placeholders `[RELEASE DATE]` and
+      `[INSERT SUPPORT EMAIL OR SUPPORT URL]` in **both** `docs/EULA.md` and
+      `packaging/EULA.txt` (keep the two files in sync)
+
 - [ ] Code-sign `BankFormatStudio.exe` and the installer (Microsoft Trusted Signing
       or OV certificate). Configure the SignTool hook in `packaging/installer.iss`
       and the signing step in `packaging/build.ps1`. **Never released unsigned.**
-- [ ] Set `AppPublisher` in `packaging/installer.iss` to the legal entity name
+- [x] `AppPublisher` set to "Leela Aravind Karlapudi" in `packaging/installer.iss`
+      (also in exe version resource `packaging/version_info.txt`)
 - [ ] Provide a product icon (`packaging/` → `bfs.spec` icon field)
 - [ ] Upload release to VirusTotal; submit any false positives to Microsoft
 - [ ] SmartScreen reputation plan (soft launch) per docs/PACKAGING-STACK-RESEARCH.md

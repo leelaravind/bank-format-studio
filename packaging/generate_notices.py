@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import licence_gate  # noqa: E402
 
 HEADER = f"""BANK STATEMENT FORMAT STUDIO — THIRD-PARTY NOTICES
+Bank Statement Format Studio is Copyright (C) 2026 Leela Aravind Karlapudi.
 Generated {date.today().isoformat()}
 
 This product bundles the third-party components listed below. Full licence

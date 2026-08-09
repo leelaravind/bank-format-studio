@@ -20,6 +20,7 @@ a = Analysis(
         (str(ROOT / "src" / "bfs_core" / "convert" / "data" / "btc_map.json"),
          "bfs_core/convert/data"),
         (str(ROOT / "packaging" / "THIRD-PARTY-NOTICES.txt"), "."),
+        (str(ROOT / "packaging" / "EULA.txt"), "."),
     ],
     hiddenimports=[],
     excludes=[
@@ -42,7 +43,7 @@ exe = EXE(
     name="BankFormatStudio",
     console=False,
     icon=None,  # OWNER ACTION: product icon asset
-    version=None,
+    version=str(ROOT / "packaging" / "version_info.txt"),
 )
 
 coll = COLLECT(

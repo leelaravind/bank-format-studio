@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "bank-format-studio"
 version = "1.0.0"
 description = "Bank Statement Format Studio — offline MT940 / ISO 20022 camt.053 / CSV converter"
+authors = [{ name = "Leela Aravind Karlapudi", email = "kpleelaaravind@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Proprietary" }

@@ -5,8 +5,7 @@
 
 #define AppName "Bank Statement Format Studio"
 #define AppVersion "1.0.0"
-; OWNER ACTION: set the legal entity name before release
-#define AppPublisher "OWNER-LEGAL-ENTITY-NAME"
+#define AppPublisher "Leela Aravind Karlapudi"
 #define DistDir "dist\\BankFormatStudio"
 
 [Setup]
@@ -14,11 +13,16 @@ AppId={{6E7B62F1-9C64-4A7E-A87A-BFS0V1000001}}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
+AppCopyright=Copyright (C) 2026 {#AppPublisher}
 DefaultDirName={autopf}\{#AppName}
 ; SEC-22: per-user install, no elevation
 PrivilegesRequired=lowest
 DisableProgramGroupPage=yes
 OutputBaseFilename=BankFormatStudio-{#AppVersion}-setup
+; EULA shown before installation; Inno Setup requires acceptance to proceed.
+; It governs the proprietary Software only and does not override the
+; third-party licences shipped in THIRD-PARTY-NOTICES.txt / licenses\.
+LicenseFile=EULA.txt
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -28,6 +32,7 @@ WizardStyle=modern
 
 [Files]
 Source: "{#DistDir}\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "EULA.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; LGPL obligation artefacts must ship in the install dir:
 Source: "THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "licenses\*"; DestDir: "{app}\licenses"; Flags: recursesubdirs ignoreversion

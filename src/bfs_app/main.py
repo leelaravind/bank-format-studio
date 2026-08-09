@@ -52,7 +52,8 @@ ABOUT_TEXT = f"""<h3>Bank Statement Format Studio {__version__}</h3>
 this machine; the application makes no network connections.</p>
 <p>This application uses the Qt framework via PySide6 under the GNU LGPL v3.
 See THIRD-PARTY-NOTICES.txt in the installation folder for all third-party
-licences and for instructions on obtaining the Qt source code.</p>"""
+licences and for instructions on obtaining the Qt source code.</p>
+<p>&copy; 2026 Leela Aravind Karlapudi. All rights reserved.</p>"""
 
 
 class _WorkerSignals(QObject):
@@ -328,6 +329,7 @@ class MainWindow(QMainWindow):
 def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Bank Statement Format Studio")
+    app.setOrganizationName("Leela Aravind Karlapudi")
     window = MainWindow()
     window.show()
     return app.exec()

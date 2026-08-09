@@ -8,6 +8,7 @@ no bank data ever leaves the machine and the application makes no network
 connections.
 
 Version 1.0.0 · proprietary/commercial · source code private.
+Publisher: Leela Aravind Karlapudi · © 2026 Leela Aravind Karlapudi.
 
 ## Repository layout
 
