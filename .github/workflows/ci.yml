@@ -1,12 +1,16 @@
-# OWNER ACTION: this file belongs at .github/workflows/ci.yml — restore with
-#   git mv ci/github-workflow-ci.yml .github/workflows/ci.yml
-# and push with credentials that hold the GitHub `workflow` scope.
+# Release-quality gates for Bank Statement Format Studio (see
+# docs/RELEASE-CHECKLIST.md). No signing, no publishing, no secrets:
+# V1 ships unsigned per docs/UNSIGNED-RELEASE-POLICY.md and CI only
+# validates; it never distributes artifacts.
 name: CI
 
 on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -30,12 +34,15 @@ jobs:
         run: |
           python tools/licence_gate.py --self-test
           python tools/licence_gate.py
+      # -p no:pytest-qt — this job intentionally has no Qt binding installed
+      # (GUI tests run in the dedicated gui job); without the flag the
+      # pytest-qt plugin aborts the whole session at startup.
       - name: Unit / integration tests (warnings are errors via pyproject)
-        run: pytest -m "not gui and not golden and not security" -q
+        run: pytest -p no:pytest-qt -m "not gui and not golden and not security" -q
       - name: Golden conversion suite
-        run: pytest -m golden -q
+        run: pytest -p no:pytest-qt -m golden -q
       - name: Security suite (socket-blocking harness)
-        run: pytest -m security -q
+        run: pytest -p no:pytest-qt -m security -q
 
   gui:
     runs-on: windows-latest
