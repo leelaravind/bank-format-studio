@@ -1,7 +1,8 @@
 ; Inno Setup script — Bank Statement Format Studio (per-user install, offline).
 ; Build after PyInstaller:  iscc packaging\installer.iss
-; Signing (OWNER ACTION - certificate required): configure SignTool below or
-; sign BankFormatStudio.exe + the installer with signtool/Trusted Signing in CI.
+; Signing: V1 ships UNSIGNED per docs/UNSIGNED-RELEASE-POLICY.md — never fake
+; a signature or present the installer as signed. If the owner later obtains a
+; certificate (Trusted Signing/OV), configure the SignTool hook below.
 
 #define AppName "Bank Statement Format Studio"
 #define AppVersion "1.0.0"

@@ -39,7 +39,7 @@ commitments, not aspirations; each carries an ID for later test traceability.
 
 ## 5. Platform & distribution
 
-- **SEC-19** Release binaries are code-signed (see PACKAGING-STACK-RESEARCH.md owner actions). Installer makes no network calls except none — fully offline installer.
+- **SEC-19** (amended 2026-08-09) V1 release binaries are **not Authenticode-signed**: they ship under the £0 unsigned path in UNSIGNED-RELEASE-POLICY.md, whose mitigations are mandatory — the build-generated `SHA256SUMS.txt` manifest published through two independent channels, VirusTotal pre-publication scan, and unsigned-status disclosure at every point of download. No release material may state or imply the binaries are code-signed. Authenticode signing (Trusted Signing or OV certificate; see PACKAGING-STACK-RESEARCH.md owner actions) is the standing upgrade path and becomes mandatory as soon as it is available to the owner. Installer makes no network calls — fully offline installer.
 - **SEC-20** The build pipeline pins all dependency versions with hashes (`--require-hashes`) so shipped bytes are reproducible/auditable; dependency licence audit runs in CI (block GPL/AGPL).
 - **SEC-21** No auto-update mechanism in V1.
 - **SEC-22** Application does not request/require elevation beyond standard user install (per-user install preferred).

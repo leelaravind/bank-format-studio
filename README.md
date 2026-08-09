@@ -46,6 +46,10 @@ powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 ```
 
 Produces `packaging/dist/BankFormatStudio/` (onedir) and, with Inno Setup 6
-installed, `packaging/Output/BankFormatStudio-<version>-setup.exe`. Release
-binaries must be code-signed before distribution (owner action; see
+installed, `packaging/Output/BankFormatStudio-<version>-setup.exe` plus a
+`SHA256SUMS.txt` manifest. V1 releases are **not code-signed**: they ship under
+the £0 unsigned path in `docs/UNSIGNED-RELEASE-POLICY.md` (unsigned status
+disclosed at the point of download, manifest published in two independent
+channels, no material may present the binaries as signed). Authenticode signing
+becomes mandatory as soon as the owner has a certificate (see
 `docs/RELEASE-CHECKLIST.md`).
