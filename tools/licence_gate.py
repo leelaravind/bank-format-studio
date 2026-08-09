@@ -66,7 +66,8 @@ def check(entries: list[tuple[str, str]]) -> list[str]:
     """entries: (distribution name, licence string). Returns violation messages."""
     violations = []
     for name, lic in entries:
-        lname, llic = name.lower(), lic.lower()
+        # PyPI distribution names normalize - and _ interchangeably.
+        lname, llic = name.lower().replace("_", "-"), lic.lower()
         if lname in DEV_ONLY or lname in FIRST_PARTY:
             continue
         if lname in EXCEPTIONS:
