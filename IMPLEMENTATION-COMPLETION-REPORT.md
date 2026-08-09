@@ -207,8 +207,15 @@ Commits created this phase (oldest first):
 `2d33c05` P1-M0 · `50d2971` P1-M1 · `3931930` P1-M2 · `1682342` P1-M3 ·
 `dc5b727` P1-M4 · `440a731` P1-M5 · `b013219` P1-M6 · `7d819d2` P1-M7 ·
 `5dcadc7` P1-M8 · `b70de12` licence-gate fix · `840fcea` P1-M9 ·
-final commit = this report (hash recorded in `git log`; pushed to
-`https://github.com/leelaravind/bank-format-studio.git` `main`).
+`c2f82e8` P1-M10 report · `702fa23` CI workflow parked (see below) ·
+plus one final commit updating this section.
+
+**Remote push: SUCCEEDED** to `https://github.com/leelaravind/bank-format-studio.git`
+(`main`), after one workaround: the local Git credential lacks the GitHub
+`workflow` OAuth scope, so `.github/workflows/ci.yml` was rejected; the workflow
+is parked at `ci/github-workflow-ci.yml` with restore instructions
+(**OWNER ACTION**: `git mv ci/github-workflow-ci.yml .github/workflows/ci.yml`,
+commit and push with your own credentials). Every CI step was executed locally.
 No history rewrites, no force-pushes.
 
 ### Commands
