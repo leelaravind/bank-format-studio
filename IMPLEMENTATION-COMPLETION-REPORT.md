@@ -5,7 +5,9 @@ under `temp/IMPLEMENTATION-EXECUTION-GOAL.md`.
 
 Status legend: **COMPLETE** · **PARTIAL** · **BLOCKED — OWNER ACTION REQUIRED** · **NOT IMPLEMENTED**
 
-(FINAL NUMBERS SECTION PENDING — filled at end of P1-M10)
+**OVERALL: engineering scope COMPLETE — 205/205 tests passing, packaged Windows
+build produced locally; code signing and clean-VM verification remain OWNER
+actions (§9/§10).**
 
 ## 1. Implementation summary
 
@@ -59,8 +61,8 @@ tests/                   unit/ golden/ security/ gui/ + fixtures/ + golden-cases
 | P1-M6 engine + goldens | COMPLETE | 35 golden cases, INV-7 in-engine, INV-8 tests |
 | P1-M7 security | COMPLETE | S01–S08 + socket-blocking battery |
 | P1-M8 GUI + CLI | COMPLETE | pytest-qt offscreen smoke incl. SEC-24 |
-| P1-M9 packaging | see §10 | |
-| P1-M10 release readiness | see §10 | |
+| P1-M9 packaging | COMPLETE (unsigned) | onedir dist + installer built and smoke-tested locally; signing = OWNER |
+| P1-M10 release readiness | COMPLETE for engineering; PARTIAL overall | automated checklist done; manual clean-VM + signing items are OWNER actions |
 
 ## 4. Supported formats/features
 
@@ -166,4 +168,72 @@ supplementary-details relocation to AddtlNtryInf, .02 pagination drop per GATE-3
 
 ## 10. Verification results and build outcome
 
-(FILLED AT COMPLETION — see below)
+### Test results (final run, 2026-08-09, Python 3.14.0 / Windows 11)
+
+- **Full suite: 205 passed, 0 failed, 0 errors** (5 non-blocking warnings —
+  pytest/Qt deprecation notices), `pytest tests -q`.
+  - Golden suite (`-m golden`): **37 passed** — 35 frozen cases (byte-exact
+    outputs, reconciliation figures, diagnostics + loss-note parity) + 2 INV-8
+    round-trip tests.
+  - Security suite (`-m security`): **69 passed**, all under the socket-blocking
+    harness (any network attempt fails the test).
+  - GUI smoke (pytest-qt, offscreen): 4 passed (included in total).
+- Lint: `ruff check src tests tools` — clean.
+- Licence gate: self-test PASSED (3/3 planted GPL/AGPL/unknown rejected);
+  environment audit PASSED (19 shipped-candidate distributions, all
+  MIT/BSD/Apache/PSF/LGPL-dynamic-exception; zero GPL/AGPL).
+- Every generated camt document is XSD-validated in-writer (a failure raises
+  E_INTERNAL); every conversion's output is reparsed for INV-7 conservation
+  in-engine. Golden byte-comparisons prove deterministic outputs (camt, MT940,
+  CSV, and XLSX via pinned zip/core.xml timestamps).
+
+### Packaging/build result (this machine)
+
+- PyInstaller 6.x `--onedir`: **SUCCESS** — `packaging/dist/BankFormatStudio/`,
+  103.4 MB, Qt6 DLLs present as replaceable files (LGPL relink check enforced by
+  the build script), THIRD-PARTY-NOTICES.txt + LGPL/GPL texts shipped.
+- Inno Setup 6.7.3: **SUCCESS** — `packaging/Output/BankFormatStudio-1.0.0-setup.exe`
+  (31.5 MB), per-user, no elevation, fully offline.
+- Frozen-app smoke: **PASSED** (app starts and stays alive; terminated cleanly).
+  Full functional test on a clean VM = manual OWNER checklist item.
+- **UNSIGNED** — signing requires the owner's certificate (never fabricated).
+- CI workflow (`.github/workflows/ci.yml`) is committed but has not executed
+  (repository CI runs on push to GitHub; local equivalents of every CI step were
+  executed as reported above).
+
+### Git
+
+Commits created this phase (oldest first):
+`2d33c05` P1-M0 · `50d2971` P1-M1 · `3931930` P1-M2 · `1682342` P1-M3 ·
+`dc5b727` P1-M4 · `440a731` P1-M5 · `b013219` P1-M6 · `7d819d2` P1-M7 ·
+`5dcadc7` P1-M8 · `b70de12` licence-gate fix · `840fcea` P1-M9 ·
+final commit = this report (hash recorded in `git log`; pushed to
+`https://github.com/leelaravind/bank-format-studio.git` `main`).
+No history rewrites, no force-pushes.
+
+### Commands
+
+```powershell
+# environment (one-time)
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -e ".[dev,gui]"
+
+# tests
+.venv\Scripts\python.exe -m pytest tests -q            # everything (205)
+.venv\Scripts\python.exe -m pytest tests -m golden -q  # golden cases
+.venv\Scripts\python.exe -m pytest tests -m security -q
+.venv\Scripts\python.exe -m ruff check src tests tools
+.venv\Scripts\python.exe tools\licence_gate.py
+
+# regenerate fixtures/goldens (deterministic)
+.venv\Scripts\python.exe tools\gen_fixtures.py
+
+# run the application / CLI from source
+.venv\Scripts\python.exe -m bfs_app.main
+.venv\Scripts\python.exe -m bfs_cli.main validate tests\fixtures\mt940\M01.sta
+.venv\Scripts\python.exe -m bfs_cli.main convert tests\fixtures\mt940\M01.sta --to camt.053.001.02 --out out.xml
+
+# Windows build (needs .venv + Inno Setup 6)
+powershell -ExecutionPolicy Bypass -File packaging\build.ps1
+# artefacts: packaging\dist\BankFormatStudio\  and  packaging\Output\*.exe
+```
