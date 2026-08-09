@@ -126,6 +126,39 @@ def test_installer_signing_hook_is_inert_not_faked():
     assert "UNSIGNED-RELEASE-POLICY" in ISS
 
 
+def test_product_icon_ico_exists_with_required_sizes():
+    ico = ROOT / "packaging" / "logo.ico"
+    assert ico.is_file()
+    data = ico.read_bytes()
+    import struct
+
+    reserved, ico_type, count = struct.unpack_from("<HHH", data, 0)
+    assert (reserved, ico_type) == (0, 1)  # valid .ico header
+    sizes = set()
+    for i in range(count):
+        w, h = struct.unpack_from("<BB", data, 6 + i * 16)
+        sizes.add((w or 256, h or 256))  # 0 encodes 256 in ICONDIRENTRY
+    required = {(s, s) for s in (16, 32, 48, 64, 128, 256)}
+    assert required <= sizes, f"missing sizes: {required - sizes}"
+
+
+def test_product_icon_is_wired_into_spec_and_installer():
+    assert 'icon=str(ROOT / "packaging" / "logo.ico")' in SPEC
+    assert "icon=None" not in SPEC
+    assert "SetupIconFile=logo.ico" in ISS
+    assert r"UninstallDisplayIcon={app}\BankFormatStudio.exe" in ISS
+
+
+def test_original_logo_source_unchanged():
+    # assets/logo/logo.png is the untouched source/reference asset; the icon
+    # pipeline (tools/make_icon.py) must only ever read it.
+    import hashlib
+
+    digest = hashlib.sha256((ROOT / "assets" / "logo" / "logo.png").read_bytes()).hexdigest()
+    assert digest == "553a58250586031bda576b8cb411c0d9bf7d36b5eb940a909d383a193ca6b98e"
+    assert (ROOT / "assets" / "logo" / "app-icon-master.png").is_file()
+
+
 def test_third_party_notices_remain_shipped():
     assert 'Source: "THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"' in ISS
     assert 'Source: "licenses\\*"; DestDir: "{app}\\licenses"' in ISS

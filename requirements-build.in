@@ -7,3 +7,4 @@ ruff==0.16.2
 shiboken6==6.11.1
 wcwidth==0.8.2
 PySide6_Essentials==6.11.1
+Pillow==12.3.0  # icon generation (tools/make_icon.py), build-time only
