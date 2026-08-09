@@ -1,21 +1,50 @@
-# bank-format-studio
+# Bank Statement Format Studio
 
-**Bank Statement Format Studio** — a local/offline desktop utility that converts and
-validates structured bank statement formats: MT940 ↔ ISO 20022 camt.053 ↔ CSV/Excel,
-with deterministic conversion, XSD validation, balance reconciliation and
-human-readable errors. No bank data ever leaves the machine.
+An offline Windows desktop utility that converts and validates bank statement
+formats — **MT940 ↔ ISO 20022 camt.053 (.001.02 / .001.08) ↔ CSV**, plus Excel
+(XLSX) export — with official-XSD validation, balance reconciliation and an
+explicit information-loss report on every conversion. All processing is local;
+no bank data ever leaves the machine and the application makes no network
+connections.
 
-## Repository status: PHASE 0 — SOURCE PACK
+Version 1.0.0 · proprietary/commercial · source code private.
 
-This repository currently contains **research and requirements only**. No product
-code exists yet. See `spec/SOURCE-PACK.md` for the source-pack verdict and
-`docs/SOURCE-PROVENANCE.md` for the provenance of every external asset.
+## Repository layout
 
 ```
-spec/             requirements & research (mapping, reconciliation, CSV, fixtures, golden cases, scope)
-references/       collected schemas & licence texts (see provenance register)
-sample-data/      public fixtures (with provenance) and synthetic samples
-tests/            reserved for future fixtures/golden cases
-docs/             provenance register, licence audit, security requirements, format notes
-research-probes/  disposable verification scripts (not product code)
+src/bfs_core/     conversion/domain library (pure, offline)
+src/bfs_app/      PySide6 desktop GUI
+src/bfs_cli/      internal CLI (CI/support)
+tests/            unit + golden + security + GUI suites, synthetic fixtures
+packaging/        PyInstaller spec, Inno Setup installer, notices, build script
+docs/             customer CSV dialect, security requirements, research records
+spec/             locked V1 specifications and implementation plan
+references/       ISO 20022 schemas + licence texts (provenance in docs/)
 ```
+
+## Development
+
+Canonical build interpreter: **Python 3.14 (64-bit, Windows)**; runtime floor 3.12.
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -e ".[dev,gui,build]"
+.venv\Scripts\python.exe -m pytest tests          # full suite (warnings are errors)
+.venv\Scripts\python.exe -m ruff check src tests tools
+.venv\Scripts\python.exe tools\licence_gate.py    # dependency licence audit
+```
+
+Runtime dependencies are hash-pinned in `requirements.lock`; dev/build tooling
+in `requirements-build.lock`. Fixtures and golden cases are regenerated
+deterministically by `tools\gen_fixtures.py` — never edit frozen goldens by hand.
+
+## Windows build
+
+```powershell
+powershell -ExecutionPolicy Bypass -File packaging\build.ps1
+```
+
+Produces `packaging/dist/BankFormatStudio/` (onedir) and, with Inno Setup 6
+installed, `packaging/Output/BankFormatStudio-<version>-setup.exe`. Release
+binaries must be code-signed before distribution (owner action; see
+`docs/RELEASE-CHECKLIST.md`).

@@ -1,3 +1,6 @@
+# OWNER ACTION: this file belongs at .github/workflows/ci.yml — restore with
+#   git mv ci/github-workflow-ci.yml .github/workflows/ci.yml
+# and push with credentials that hold the GitHub `workflow` scope.
 name: CI
 
 on:
@@ -27,10 +30,28 @@ jobs:
         run: |
           python tools/licence_gate.py --self-test
           python tools/licence_gate.py
-      - name: Unit / integration / golden tests
-        run: pytest -m "not gui" -q
+      - name: Unit / integration tests (warnings are errors via pyproject)
+        run: pytest -m "not gui and not golden and not security" -q
+      - name: Golden conversion suite
+        run: pytest -m golden -q
       - name: Security suite (socket-blocking harness)
         run: pytest -m security -q
+
+  gui:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install with GUI extra
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,gui]"
+      - name: GUI smoke tests (offscreen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: pytest -m gui -q
 
   hashed-install-proof:
     # SEC-20: prove the runtime dependency set installs with --require-hashes

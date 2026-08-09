@@ -66,26 +66,39 @@ genkgo/camt fixtures. Licence texts: references/licences/ in the source
 repository.
 
 Python is distributed under the Python Software Foundation License.
-PyInstaller (build tool, GPL-2.0+ with Bootloader Exception) is used to
-package this application; the exception explicitly permits distributing
-the bundled application without restriction.
 """
 
 
 def main() -> int:
     lines = [HEADER]
+    build_tools: list[str] = []
     for dist in sorted(metadata.distributions(), key=lambda d: (d.metadata["Name"] or "").lower()):
         name = dist.metadata["Name"] or "?"
         lname = name.lower().replace("_", "-")
         if lname in licence_gate.DEV_ONLY or lname in licence_gate.FIRST_PARTY:
             continue
         licence = licence_gate.licence_of(dist)
+        # C-7: components used only to BUILD the product (PyInstaller and its
+        # helpers) are not bundled and must not be listed as bundled.
+        if lname in licence_gate.EXCEPTIONS and "build-time only" in licence_gate.EXCEPTIONS[lname]:
+            build_tools.append(f"{name} {dist.version} — {licence}")
+            continue
         lines.append(f"{name} {dist.version} — {licence}")
         for key in ("Home-page", "Project-URL"):
             value = dist.metadata.get(key)
             if value:
                 lines.append(f"    {value}")
                 break
+    if build_tools:
+        lines.append("""
+======================================================================
+BUILD TOOLS (used to produce this application; NOT distributed with it)
+======================================================================""")
+        lines.extend(build_tools)
+        lines.append("PyInstaller is licensed GPL-2.0-or-later WITH a Bootloader "
+                     "Exception that expressly permits distributing bundled "
+                     "applications without restriction; no PyInstaller code beyond "
+                     "the exception-covered bootloader is included in this product.")
     lines.append(FOOTER)
     out = ROOT / "packaging" / "THIRD-PARTY-NOTICES.txt"
     out.write_text("\n".join(lines), "utf-8")

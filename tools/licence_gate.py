@@ -49,7 +49,9 @@ FIRST_PARTY = {"bank-format-studio"}
 # Dev/test-only tools excluded from the shipped-product audit (never bundled).
 DEV_ONLY = {"pip", "setuptools", "wheel", "pytest", "pluggy", "iniconfig", "colorama",
             "packaging", "ruff", "pip-licenses", "prettytable", "wcwidth", "pygments",
-            "pip-tools", "build", "pyproject-hooks", "click", "tomli"}
+            "pip-tools", "build", "pyproject-hooks", "click", "tomli",
+            # test/build-time only — verified absent from the frozen bundle (PYZ audit):
+            "pytest-qt", "altgraph", "pefile", "pywin32-ctypes"}
 
 
 def licence_of(dist: metadata.Distribution) -> str:
