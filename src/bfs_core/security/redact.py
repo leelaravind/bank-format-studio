@@ -9,13 +9,17 @@ from __future__ import annotations
 import logging
 import re
 
-_IBAN_RE = re.compile(r"\b([A-Z]{2}\d{2})[A-Z0-9]{6,26}([A-Z0-9]{4})\b")
-_LONG_NUMBER_RE = re.compile(r"\b(\d{2})\d{4,}(\d{2})\b")
+# C-5 remediation: deliberately NOT word-boundary-anchored — account-like tokens
+# embedded in surrounding text (log concatenation, JSON, path fragments) must
+# still be caught. A masking backstop tolerates occasional over-redaction.
+_IBAN_RE = re.compile(r"([A-Z]{2}\d{2})[A-Z0-9]{6,26}([A-Z0-9]{4})")
+_LONG_NUMBER_RE = re.compile(r"(\d{2})\d{4,}(\d{2})")
 
 
 def mask_value(text: str) -> str:
     """Mask account-number-like tokens: IBANs to 'DE89…3000' style, long digit
-    runs to first/last two digits."""
+    runs (8+ digits) to first/last two digits — including tokens embedded in
+    adjacent text."""
     masked = _IBAN_RE.sub(lambda m: f"{m.group(1)}…{m.group(2)}", text)
     return _LONG_NUMBER_RE.sub(lambda m: f"{m.group(1)}…{m.group(2)}", masked)
 
