@@ -104,6 +104,20 @@ class Transaction:
         return self.amount * self.credit_debit.sign
 
 
+@dataclass(frozen=True)
+class TransactionsSummary:
+    """camt TxsSummry figures as declared by the bank (INV-5 cross-check input)."""
+
+    total_count: int | None = None
+    total_sum: Decimal | None = None
+    credit_count: int | None = None
+    credit_sum: Decimal | None = None
+    debit_count: int | None = None
+    debit_sum: Decimal | None = None
+    net_amount: Decimal | None = None          # signed
+    net_credit_debit: CreditDebit | None = None
+
+
 @dataclass
 class Statement:
     statement_id: str
@@ -127,6 +141,7 @@ class Statement:
     forward_available: tuple[Balance, ...] = ()         # :65: / FWAV
     other_balances: tuple[tuple[str, Balance], ...] = ()  # (type code, balance)
     transactions: list[Transaction] = field(default_factory=list)
+    summary: TransactionsSummary | None = None
     additional_info: str | None = None
     source_format: str = ""
 

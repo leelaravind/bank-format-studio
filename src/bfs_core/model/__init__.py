@@ -29,6 +29,7 @@ from bfs_core.model.statement import (
     EntryStatus,
     Statement,
     Transaction,
+    TransactionsSummary,
 )
 
 __all__ = [
@@ -45,6 +46,7 @@ __all__ = [
     "Severity",
     "Statement",
     "Transaction",
+    "TransactionsSummary",
     "decimal_places",
     "ensure_decimal",
     "format_swift_amount",

@@ -18,7 +18,38 @@ from bfs_core.model.statement import (
     EntryStatus,
     Statement,
     Transaction,
+    TransactionsSummary,
 )
+
+
+def _summary(s: TransactionsSummary | None) -> dict[str, Any] | None:
+    if s is None:
+        return None
+    return {
+        "total_count": s.total_count,
+        "total_sum": _opt_dec(s.total_sum),
+        "credit_count": s.credit_count,
+        "credit_sum": _opt_dec(s.credit_sum),
+        "debit_count": s.debit_count,
+        "debit_sum": _opt_dec(s.debit_sum),
+        "net_amount": _opt_dec(s.net_amount),
+        "net_credit_debit": s.net_credit_debit.value if s.net_credit_debit else None,
+    }
+
+
+def _summary_from(d: dict[str, Any] | None) -> TransactionsSummary | None:
+    if d is None:
+        return None
+    return TransactionsSummary(
+        total_count=d.get("total_count"),
+        total_sum=Decimal(d["total_sum"]) if d.get("total_sum") else None,
+        credit_count=d.get("credit_count"),
+        credit_sum=Decimal(d["credit_sum"]) if d.get("credit_sum") else None,
+        debit_count=d.get("debit_count"),
+        debit_sum=Decimal(d["debit_sum"]) if d.get("debit_sum") else None,
+        net_amount=Decimal(d["net_amount"]) if d.get("net_amount") else None,
+        net_credit_debit=CreditDebit(d["net_credit_debit"]) if d.get("net_credit_debit") else None,
+    )
 
 
 def _balance(b: Balance | None) -> dict[str, str] | None:
@@ -105,6 +136,7 @@ def statement_to_dict(s: Statement) -> dict[str, Any]:
         "forward_available": [_balance(b) for b in s.forward_available],
         "other_balances": [{"type": code, "balance": _balance(b)} for code, b in s.other_balances],
         "transactions": [transaction_to_dict(t) for t in s.transactions],
+        "summary": _summary(s.summary),
         "additional_info": s.additional_info,
         "source_format": s.source_format,
     }
@@ -183,6 +215,7 @@ def statement_from_dict(d: dict[str, Any]) -> Statement:
             if (b := _balance_from(x["balance"])) is not None
         ),
         transactions=[transaction_from_dict(x) for x in d.get("transactions", ())],
+        summary=_summary_from(d.get("summary")),
         additional_info=d.get("additional_info"),
         source_format=d.get("source_format", ""),
     )

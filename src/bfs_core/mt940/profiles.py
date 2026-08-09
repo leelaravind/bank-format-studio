@@ -78,7 +78,7 @@ def _parse_nl(text: str) -> Parsed86:
     prefix = parts[0].strip().strip("/")
     if prefix:
         result.additional.append(_clean(prefix))
-    pairs = list(zip(parts[1::2], parts[2::2]))
+    pairs = list(zip(parts[1::2], parts[2::2], strict=False))
     cp_name = cp_account = cp_bic = None
     party_section: str | None = None
     for code, raw in pairs:
@@ -183,7 +183,7 @@ def _parse_gvc(text: str) -> Parsed86:
     words = _SEPA_WORD_RE.split(joined)
     free_prefix = words[0].strip()
     svwz = None
-    for word, value in zip(words[1::2], words[2::2]):
+    for word, value in zip(words[1::2], words[2::2], strict=False):
         value = value.strip()
         if word == "EREF":
             result.end_to_end_id = value or result.end_to_end_id
