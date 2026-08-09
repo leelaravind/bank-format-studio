@@ -18,17 +18,6 @@ from datetime import date
 import mt940 as mt940lib
 from mt940.tags import StatementASNB
 
-# SEC-10/SEC-11: the mt940 library traces raw statement content (references,
-# names, IBANs) at DEBUG level. Cap it so a globally-enabled DEBUG session never
-# leaks document data; explicit opt-in re-enables it for support diagnostics.
-logging.getLogger("mt940").setLevel(logging.WARNING)
-
-
-def enable_verbose_parse_tracing() -> None:
-    """Explicit opt-in (SEC-11): re-enables the mt940 library's raw parse tracing.
-    Callers must warn the user that traces contain full statement data."""
-    logging.getLogger("mt940").setLevel(logging.DEBUG)
-
 from bfs_core.errors import (
     E_MT940_BAD_DC_MARK,
     E_MT940_MISSING_CLOSING,
@@ -51,6 +40,18 @@ from bfs_core.model import (
 )
 from bfs_core.mt940.profiles import parse_86
 from bfs_core.security import DEFAULT_LIMITS, Limits
+
+# SEC-10/SEC-11: the mt940 library traces raw statement content (references,
+# names, IBANs) at DEBUG level. Cap it so a globally-enabled DEBUG session never
+# leaks document data; explicit opt-in re-enables it for support diagnostics.
+logging.getLogger("mt940").setLevel(logging.WARNING)
+
+
+def enable_verbose_parse_tracing() -> None:
+    """Explicit opt-in (SEC-11): re-enables the mt940 library's raw parse tracing.
+    Callers must warn the user that traces contain full statement data."""
+    logging.getLogger("mt940").setLevel(logging.DEBUG)
+
 
 _IBAN_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$")
 _TAG_LINE_RE = re.compile(r"^:(\d{2}[A-Z]?|NS):", re.MULTILINE)
