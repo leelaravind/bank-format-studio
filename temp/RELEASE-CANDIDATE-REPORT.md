@@ -173,7 +173,33 @@ new artifacts below.
 
 ---
 
-# Icon-fix rebuild (2026-08-14) — release-candidate defect remediation
+# Bank Statement Format Studio V1 **RC2** — icon-fix rebuild (2026-08-14)
+
+> **RC2 FROZEN (2026-08-14).** The corrected installer below is designated
+> **Bank Statement Format Studio V1 RC2**:
+>
+> - **File:** `BankFormatStudio-1.0.0-setup.exe`
+> - **Size:** 36,889,429 bytes
+> - **SHA-256:** `7e1cd5c8898b9c9cb56c222ddf5074bb2800f077bcb521626551e9b110a5042a`
+>   (independently recomputed at RC2 freeze with `Get-FileHash`; matches the
+>   build-time manifest byte-for-byte)
+> - **Source commit:** `48d3a53` (pushed to `main`; GitHub Actions CI run
+>   31813273818 completed **success**, 2026-08-14)
+> - **Build provenance:** `packaging/build.ps1` 8/8 on 2026-08-14 (this
+>   machine, pinned venv, Python 3.14.0, PyInstaller 6.22.0, Inno Setup 6)
+> - **Verification at freeze (non-artifact-changing):** full pytest 269
+>   passed / 0 failed / 0 skipped; ruff clean; licence gate passed (16
+>   distributions, zero GPL/AGPL); PE RT_ICON re-inspection 6/6 byte-match
+>   in both exes; `_internal/logo.ico` byte-identical
+> - **Unsigned:** yes — UNSIGNED V1 per `docs/UNSIGNED-RELEASE-POLICY.md`;
+>   never present as signed
+> - **Publisher:** Leela Aravind Karlapudi · **Brand:** ITISYOU ·
+>   **Support:** support@itisyou.app
+> - **Supersedes:** RC1 installer `308ffce4…0799` (2026-08-10), which failed
+>   manual visual verification and must never be published
+>
+> RC2 is frozen byte-for-byte. Any binary change invalidates RC2 and
+> requires a new hash and repeated downstream checks.
 
 ## Defect and root cause
 
