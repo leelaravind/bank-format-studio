@@ -99,6 +99,27 @@ scanned; RC2's VT results do not transfer to a different file).
 
 ## 5. Final verdict
 
+> **ADDENDUM (2026-08-14, after RC3 scan).** The owner submitted RC3
+> (`f393f349…a8f340`) to VirusTotal; Microsoft's `Trojan:Win32/Wacatac.B!ml`
+> verdict **recurred**. This matches the prediction in
+> `temp/RC3-AV-FALSE-POSITIVE-REPORT.md` §4: the remaining trigger factors
+> (unsigned + zero-prevalence hash + PyInstaller/Inno shape) cannot be
+> removed by any legitimate build change, and every rebuild resets file
+> reputation to zero. **No further rebuild is justified — RC3 stays
+> frozen.** The verdict below advances to:
+>
+> **SAFE TO CONTINUE — VENDOR REVIEW PENDING**
+>
+> Gating action: Microsoft WDSI false-positive submission for the exact
+> RC3 file (prepared pack: `temp/MICROSOFT-FP-SUBMISSION.md`), then VT
+> re-analysis after Microsoft clears it. Owner: record the RC3 VT report
+> URL and detection ratio here, and preserve the saved report page in
+> `temp/` as was done for RC2. Publication remains blocked until the
+> vendor review resolves and the remaining release gates (manual visual
+> verification, clean-VM certification) pass against `f393f349…a8f340`.
+
+Original verdict at the time of writing (superseded by the addendum above):
+
 **NEW RC REQUIRES VIRUSTOTAL.**
 
 No credible evidence of malicious code, unexpected network activity,
