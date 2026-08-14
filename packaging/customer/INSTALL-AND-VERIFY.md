@@ -39,7 +39,7 @@ is planned for a future release). That has two honest consequences:
    **exactly**:
 
    ```
-   7e1cd5c8898b9c9cb56c222ddf5074bb2800f077bcb521626551e9b110a5042a
+   f393f34968cd4e703506d8ab2def2b341f7de59ca0485ebe4851eb6fe6a8f340
    ```
 
 3. **If the hashes match** and you choose to proceed: run the installer, and

@@ -80,6 +80,19 @@ def test_installer_identity_is_set():
     assert 'version=str(ROOT / "packaging" / "version_info.txt")' in SPEC
 
 
+def test_installer_exe_version_resource_is_complete():
+    # RC2 VirusTotal lesson: Inno leaves the setup exe's binary FILEVERSION at
+    # 0.0.0.0 and OriginalFilename empty unless set. Missing version metadata
+    # on an unsigned executable is a known ML false-positive contributor and
+    # bad transparency; keep the setup exe's version resource fully populated.
+    assert "VersionInfoVersion=1.0.0.0" in ISS
+    assert "VersionInfoDescription={#AppName} Setup" in ISS
+    assert "VersionInfoCompany={#AppPublisher}" in ISS
+    assert "VersionInfoCopyright=Copyright (C) 2026 {#AppPublisher}" in ISS
+    assert "VersionInfoOriginalFileName=BankFormatStudio-{#AppVersion}-setup.exe" in ISS
+    assert "AppContact=support@itisyou.app" in ISS
+
+
 def test_unsigned_release_policy_exists_and_is_honest():
     text = _collapsed(POLICY.read_text("utf-8"))
     assert "without Authenticode code signing" in text

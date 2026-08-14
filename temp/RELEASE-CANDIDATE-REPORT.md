@@ -175,6 +175,17 @@ new artifacts below.
 
 # Bank Statement Format Studio V1 **RC2** — icon-fix rebuild (2026-08-14)
 
+> **⚠ RC2 SUPERSEDED BY RC3 (2026-08-14, same day).** The owner's
+> VirusTotal scan of RC2 returned 2/70 heuristic detections
+> (`Trojan:Win32/Wacatac.B!ml`, ArcticWolf `Unsafe`). Investigation traced
+> a contributing defect: the setup exe's PE version resource was
+> incomplete (binary FILEVERSION 0.0.0.0, empty OriginalFilename). Fixed
+> in `installer.iss`; rebuilt as **RC3**, installer SHA-256
+> `f393f34968cd4e703506d8ab2def2b341f7de59ca0485ebe4851eb6fe6a8f340`
+> (36,892,164 bytes); the inner `BankFormatStudio.exe` is byte-identical
+> to RC2's. Full analysis: `temp/RC3-AV-FALSE-POSITIVE-REPORT.md`.
+> The RC2 installer hash `7e1cd5c8…042a` must not be published.
+
 > **RC2 FROZEN (2026-08-14).** The corrected installer below is designated
 > **Bank Statement Format Studio V1 RC2**:
 >

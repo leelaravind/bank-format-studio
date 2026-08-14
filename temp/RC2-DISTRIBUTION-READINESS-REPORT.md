@@ -1,5 +1,14 @@
 # RC2 DISTRIBUTION READINESS REPORT — Bank Statement Format Studio V1
 
+> **⚠ RC2 SUPERSEDED BY RC3 (2026-08-14).** After this report, the owner's
+> VirusTotal scan of RC2 returned 2/70 heuristic detections; the
+> investigation and fix (installer PE version resource completed) are in
+> `temp/RC3-AV-FALSE-POSITIVE-REPORT.md`. Everything in this report keyed
+> to hash `7e1cd5c8…042a` now applies to the **RC3** installer hash
+> `f393f34968cd4e703506d8ab2def2b341f7de59ca0485ebe4851eb6fe6a8f340`
+> (customer package reassembled as `RC3-customer-package/` and
+> re-audited). The CONDITIONAL GO verdict stands, against the RC3 hash.
+
 Date: 2026-08-14
 Scope: RC2 freeze verification, VirusTotal status, distribution-compliance
 audit, customer distribution package, package integrity. Per the binding plan

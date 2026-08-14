@@ -15,6 +15,17 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 AppCopyright=Copyright (C) 2026 {#AppPublisher}
+AppContact=support@itisyou.app
+; Complete PE version resource for the setup exe itself. Without these Inno
+; leaves the binary FILEVERSION at 0.0.0.0 and OriginalFilename empty —
+; missing metadata that both hurts transparency (file Properties dialog) and
+; is a known machine-learning false-positive contributor on unsigned,
+; low-prevalence executables (RC2 VirusTotal: Wacatac.B!ml / ArcticWolf).
+VersionInfoVersion=1.0.0.0
+VersionInfoDescription={#AppName} Setup
+VersionInfoCompany={#AppPublisher}
+VersionInfoCopyright=Copyright (C) 2026 {#AppPublisher}
+VersionInfoOriginalFileName=BankFormatStudio-{#AppVersion}-setup.exe
 DefaultDirName={autopf}\{#AppName}
 ; SEC-22: per-user install, no elevation
 PrivilegesRequired=lowest
