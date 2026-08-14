@@ -6,6 +6,10 @@ Trigger: owner's VirusTotal scan of RC2 installer
 returned **2/70 detections**: Microsoft `Trojan:Win32/Wacatac.B!ml` and
 Arctic Wolf `Unsafe`.
 
+Evidence: the owner's saved VirusTotal report page is preserved at
+`temp/VirusTotal - File - 7e1cd5c8…042a.html` and confirms 2/70 with
+`Wacatac` (Microsoft) and `ArcticWolf` verdicts against the RC2 hash.
+
 ## 1. Investigation (before any change)
 
 ### Local reproduction attempt
