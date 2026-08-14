@@ -8,6 +8,11 @@ and produces:
     artwork; 16/32/48/64 use a simplified text-free treatment (document +
     conversion arrow + structured table), because the product-name text is
     unreadable at small sizes.
+  - packaging/wizard-small*.bmp      : Inno Setup wizard corner logo
+    (WizardSmallImageFile, shown on every installer page; 55 px uses the
+    simplified artwork, 110 px the master).
+  - packaging/wizard-image*.bmp      : Inno Setup wizard banner
+    (WizardImageFile, welcome/finish pages), master artwork on white.
 
 Usage:  python tools/make_icon.py
 Requires Pillow (requirements-build.in, build-time only).
@@ -45,6 +50,12 @@ ERASE_SAMPLE_OFFSET = 14  # sample fill colour this far left of each block
 
 ICO_SIZES = (256, 128, 64, 48, 32, 16)
 SIMPLIFIED_MAX = 64  # sizes <= this use the text-free treatment
+
+# Inno Setup wizard bitmaps (BMP, no alpha; Inno picks the best size per
+# display scaling from a comma-separated list in installer.iss).
+WIZARD_SMALL = (("wizard-small.bmp", 55), ("wizard-small-2x.bmp", 110))
+WIZARD_BANNER = (("wizard-image.bmp", (164, 314)), ("wizard-image-2x.bmp", (328, 628)))
+WIZARD_BACKGROUND = (255, 255, 255)  # matches the modern wizard's white panes
 
 
 def rounded_alpha(img: Image.Image, radius: int, inset: int) -> Image.Image:
@@ -88,6 +99,29 @@ def build_simplified(tile: Image.Image) -> Image.Image:
     return rounded_alpha(symbol, round(symbol.width * 0.165), 0)
 
 
+def flatten_on(art: Image.Image, canvas_size: tuple[int, int],
+               icon_fraction: float) -> Image.Image:
+    """Centre the RGBA artwork on an opaque canvas (BMP carries no alpha)."""
+    w, h = canvas_size
+    canvas = Image.new("RGB", (w, h), WIZARD_BACKGROUND)
+    side = round(min(w, h) * icon_fraction)
+    icon = art.resize((side, side), Image.LANCZOS)
+    canvas.paste(icon, ((w - side) // 2, (h - side) // 2), icon)
+    return canvas
+
+
+def build_wizard_bitmaps(master: Image.Image, simplified: Image.Image) -> None:
+    for name, size in WIZARD_SMALL:
+        art = simplified if size <= SIMPLIFIED_MAX else master
+        path = ICO.parent / name
+        flatten_on(art, (size, size), 1.0).save(path, format="BMP")
+        print(f"wizard: {path} {size}x{size}")
+    for name, (w, h) in WIZARD_BANNER:
+        path = ICO.parent / name
+        flatten_on(master, (w, h), 0.8).save(path, format="BMP")
+        print(f"wizard: {path} {w}x{h}")
+
+
 def main() -> None:
     sheet = Image.open(SOURCE).convert("RGB")
     tile = sheet.crop(TILE_BOX)
@@ -97,6 +131,7 @@ def main() -> None:
     print(f"master: {MASTER} {master.size}")
 
     simplified = build_simplified(tile)
+    build_wizard_bitmaps(master, simplified)
     frames = []
     for size in ICO_SIZES:
         art = simplified if size <= SIMPLIFIED_MAX else master

@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -56,6 +57,29 @@ licences and for instructions on obtaining the Qt source code.</p>
 <p>&copy; 2026 Leela Aravind Karlapudi. All rights reserved.</p>"""
 
 
+# Explicit Windows AppUserModelID: without it the taskbar may attribute the
+# window to a generic host identity instead of this product (and pinned/
+# grouped taskbar entries then show the wrong icon).
+APP_USER_MODEL_ID = "ITISYOU.BankStatementFormatStudio.1"
+
+
+def app_icon() -> QIcon:
+    """Product icon for the runtime Qt surfaces (title bar, taskbar, Alt-Tab).
+
+    The icon embedded in the PE resources of BankFormatStudio.exe only covers
+    Explorer/shortcut surfaces; Qt paints its own window icon and falls back
+    to a generic one unless it is set explicitly. Resolve the .ico that
+    PyInstaller ships inside the frozen bundle (sys._MEIPASS, the _internal
+    directory in onedir builds) — never a repository-relative path — and fall
+    back to the repo copy only for source checkouts.
+    """
+    if getattr(sys, "frozen", False):
+        base = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+    else:
+        base = Path(__file__).resolve().parents[2] / "packaging"
+    return QIcon(str(base / "logo.ico"))
+
+
 class _WorkerSignals(QObject):
     finished = Signal(object)
     failed = Signal(object)
@@ -79,6 +103,7 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Bank Statement Format Studio")
+        self.setWindowIcon(app_icon())
         self.resize(1080, 720)
         self.pool = QThreadPool.globalInstance()
         self.source_format: str | None = None
@@ -327,9 +352,14 @@ class MainWindow(QMainWindow):
 
 
 def main() -> int:
+    if sys.platform == "win32":
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
     app = QApplication(sys.argv)
     app.setApplicationName("Bank Statement Format Studio")
     app.setOrganizationName("Leela Aravind Karlapudi")
+    app.setWindowIcon(app_icon())
     window = MainWindow()
     window.show()
     return app.exec()

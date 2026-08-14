@@ -151,6 +151,41 @@ def test_product_icon_is_wired_into_spec_and_installer():
     assert r"UninstallDisplayIcon={app}\BankFormatStudio.exe" in ISS
 
 
+def test_runtime_qt_icon_is_wired_and_ico_ships_in_the_bundle():
+    # RC defect regression: the PE-embedded icon covers Explorer only; the
+    # running window needs an explicit Qt icon loaded from the frozen bundle.
+    main_src = (ROOT / "src" / "bfs_app" / "main.py").read_text("utf-8")
+    assert "setWindowIcon" in main_src
+    assert "logo.ico" in main_src
+    assert "_MEIPASS" in main_src  # frozen-bundle resolution, not repo-relative
+    assert "SetCurrentProcessExplicitAppUserModelID" in main_src
+    assert '(str(ROOT / "packaging" / "logo.ico"), ".")' in SPEC
+
+
+def _bmp_size(path: Path) -> tuple[int, int]:
+    import struct
+
+    data = path.read_bytes()
+    assert data[:2] == b"BM", f"{path.name} is not a BMP (Inno requires BMP)"
+    width, height = struct.unpack_from("<ii", data, 18)
+    return width, abs(height)
+
+
+def test_installer_wizard_branding_images_exist_and_are_wired():
+    # Owner-visible installer branding: corner logo on every wizard page and
+    # the welcome/finish banner (SetupIconFile alone shows nothing in the UI).
+    expected = {
+        "wizard-small.bmp": (55, 55),
+        "wizard-small-2x.bmp": (110, 110),
+        "wizard-image.bmp": (164, 314),
+        "wizard-image-2x.bmp": (328, 628),
+    }
+    for name, size in expected.items():
+        assert _bmp_size(ROOT / "packaging" / name) == size, f"{name} has wrong dimensions"
+    assert "WizardSmallImageFile=wizard-small.bmp,wizard-small-2x.bmp" in ISS
+    assert "WizardImageFile=wizard-image.bmp,wizard-image-2x.bmp" in ISS
+
+
 def test_original_logo_source_unchanged():
     # assets/logo/logo.png is the untouched source/reference asset; the icon
     # pipeline (tools/make_icon.py) must only ever read it.

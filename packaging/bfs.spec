@@ -21,6 +21,9 @@ a = Analysis(
          "bfs_core/convert/data"),
         (str(ROOT / "packaging" / "THIRD-PARTY-NOTICES.txt"), "."),
         (str(ROOT / "packaging" / "EULA.txt"), "."),
+        # Runtime Qt window/taskbar icon: the PE-embedded icon covers Explorer
+        # only, so main.py loads this file from the bundle at startup.
+        (str(ROOT / "packaging" / "logo.ico"), "."),
     ],
     hiddenimports=[],
     excludes=[
